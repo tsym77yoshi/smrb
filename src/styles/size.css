@@ -1,0 +1,14 @@
+:root {
+  --height-item: 2.5rem;
+  --fontsize-item: 1.2rem;
+  --height-tlmargin: 0.5rem;
+  --height-layer: calc(var(--height-item) + var(--height-tlmargin));/* Timeline.vueのHEIGHT_LAYERも変更してください */
+
+  --height-foot-tool-bar: min(20vw, 10vh);
+
+  --width-timeline-bar: 20vw;
+}
+
+button {
+  font-size: 2rem;
+}
