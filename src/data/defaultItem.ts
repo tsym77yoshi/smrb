@@ -7,7 +7,7 @@ import type {
   ShapeItem /* 
   TachieItem, */,
   VarNumbers,
-} from "@/type/itemType";
+} from "@/types/itemType";
 
 const Varnum = (arg: number) => {
   return {

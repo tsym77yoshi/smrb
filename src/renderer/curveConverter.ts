@@ -1,4 +1,4 @@
-import type { VarNumbers, KeyFrames } from "@/type/itemType";
+import type { VarNumbers, KeyFrames } from "@/types/itemType";
 import { animation } from "@/data/animationCurve";
 
 // アイテム毎に

@@ -1,4 +1,4 @@
-import type { ShapeItem } from "@/type/itemType";
+import type { ShapeItem } from "@/types/itemType";
 import type { ItemOption } from "../rendererTypes";
 import { CurveConverter } from "../curveConverter";
 import { createFrameBuffer } from "../webglUtility";

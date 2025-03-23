@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import Dexie, { type EntityTable } from 'dexie'
-import type { LoadedFile, FileInfo, FileSearchInfo, FileCreditDetail, FileStatus, FileType } from '@/type/fileType'
+import type { LoadedFile, FileInfo, FileSearchInfo, FileCreditDetail, FileStatus, FileType } from '@/types/fileType'
 
 const db = new Dexie('FileDatabase') as Dexie & {
   files: EntityTable<

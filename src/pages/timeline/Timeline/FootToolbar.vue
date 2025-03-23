@@ -11,9 +11,9 @@
 
 <script setup lang="ts">
 import FootToolButton from "./FootToolButton.vue";
-import type { LogAdd, LogProperty } from "@/type/logType";
-import type { Item, AudioItem, VarNumbers, ItemProperty } from "@/type/itemType";
-import { isAudioItem, itemPropertyGroups, getAnimationValuesType } from "@/type/itemType";
+import type { LogAdd, LogProperty } from "@/types/logType";
+import type { Item, AudioItem, VarNumbers, ItemProperty } from "@/types/itemType";
+import { isAudioItem, itemPropertyGroups, getAnimationValuesType } from "@/types/itemType";
 import { useItemsStore, useSelectionStore, useStateStore, useLogStore, useVideoInfoStore } from "@/store/tlStore";
 import { animation } from "@/data/animationCurve";
 import { useRouter } from "vue-router";

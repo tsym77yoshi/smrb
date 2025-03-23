@@ -59,7 +59,7 @@ import {
   useLogStore,
 } from "@/store/tlStore";
 import { getItemColor } from "@/components/TLItem/getItemColor";
-import type { LogProperty } from "@/type/logType";
+import type { LogProperty } from "@/types/logType";
 
 
 // タイムラインバーの位置

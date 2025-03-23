@@ -14,8 +14,8 @@
 
 <script setup lang="ts">
 import { ref, nextTick } from "vue";
-import type { AnimationType, VarNumbers } from "@/type/itemType";
-import { animationTypeLabelAndValues } from "@/type/itemType";
+import type { AnimationType, VarNumbers } from "@/types/itemType";
+import { animationTypeLabelAndValues } from "@/types/itemType";
 import { animation } from "@/data/animationCurve";
 
 const props = defineProps<{

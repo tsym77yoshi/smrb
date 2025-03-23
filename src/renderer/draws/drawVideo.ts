@@ -1,4 +1,4 @@
-import type { TextItem } from "@/type/itemType";
+import type { TextItem } from "@/types/itemType";
 import type { ItemOption } from "../rendererTypes";
 import { CurveConverter } from "../curveConverter";
 import { createTexture } from "../webglUtility";

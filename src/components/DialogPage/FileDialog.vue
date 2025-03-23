@@ -64,8 +64,8 @@ import { ref, computed, onMounted } from "vue";
 import { onBeforeRouteLeave, useRouter, useRoute } from "vue-router";
 import { useItemsStore, useStateStore, useLogStore, useVideoInfoStore, useSettingStore } from "@/store/tlStore"
 import { useFileStore } from "@/store/fileStore"
-import type { FileCreditDetail, FileSearchInfo, FileType, FileInfo } from "@/type/fileType";
-import { fileTypes } from "@/type/fileType";
+import type { FileCreditDetail, FileSearchInfo, FileType, FileInfo } from "@/types/fileType";
+import { fileTypes } from "@/types/fileType";
 import { defaultImage, defaultVideo, defaultAudio } from "@/data/defaultItem";
 
 const items = useItemsStore();

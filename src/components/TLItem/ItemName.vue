@@ -4,8 +4,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ImageItem, Item, ShapeItem, TextItem } from "@/type/itemType";
-import { dropDowns } from "@/type/itemType";
+import type { ImageItem, Item, ShapeItem, TextItem } from "@/types/itemType";
+import { dropDowns } from "@/types/itemType";
 import { useFileStore } from "@/store/fileStore";
 
 const props = defineProps<{

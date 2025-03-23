@@ -1,6 +1,6 @@
 // カーブ
-import type { AnimationType, VarNumbers, KeyFrames, EasingType, EasingMode } from "@/type/itemType";
-import { getAnimationValuesType, isEasingAnimationType } from "@/type/itemType";
+import type { AnimationType, VarNumbers, KeyFrames, EasingType, EasingMode } from "@/types/itemType";
+import { getAnimationValuesType, isEasingAnimationType } from "@/types/itemType";
 
 // frameはアイテム開始からのフレーム数、fpsは全体としてのフレームレート、itemLengthはアイテムの長さ(フレーム)
 export const animation = (varNum: VarNumbers, frame: number, inputKeyFrames: KeyFrames, itemLength: number, fps: number): number => {

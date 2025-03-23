@@ -24,7 +24,7 @@ onMounted(() => {
   if (renderView.value) {
     if (renderView.value) {
       let ctx = renderView.value;
-      renderer = new Renderer(ctx);
+      renderer = new Renderer(ctx.getContext("webgl"));
       renderer.render(state.frame, items.layers);
     } else {
       console.error("Canvasを取得できませんでした。");

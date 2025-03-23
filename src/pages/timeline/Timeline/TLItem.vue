@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import { useStateStore } from "@/store/tlStore";
-import type { TLItem } from "@/type/itemType";
+import type { TLItem } from "@/types/itemType";
 import ItemName from "@/components/TLItem/ItemName.vue";
 
 const state = useStateStore();

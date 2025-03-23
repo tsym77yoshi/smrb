@@ -1,4 +1,4 @@
-import type { Item } from "@/type/itemType"
+import type { Item } from "@/types/itemType"
 
 // アイテムが有効な値を示しているかどうかの判定
 export const isValidItemPos = (checkItems: Item[]): boolean => {

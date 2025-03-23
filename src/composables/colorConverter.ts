@@ -1,4 +1,4 @@
-import type { ColorHEXA } from "@/type/utilityType";
+import type { ColorHEXA } from "@/types/utilityType";
 
 // 全て0~1の範囲
 export const convertColorHEXA = (colorHEXA: ColorHEXA): [number, number, number, number] => {

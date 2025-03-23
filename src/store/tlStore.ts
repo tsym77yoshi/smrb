@@ -1,7 +1,7 @@
 import { ref, computed, watchEffect } from 'vue'
 import { defineStore } from 'pinia'
-import type { HideLevel, Item, TLItem, ItemKey } from '@/type/itemType'
-import type { Log, LogAdd, LogRemove, LogProperty } from '@/type/logType'
+import type { HideLevel, Item, TLItem, ItemKey } from '@/types/itemType'
+import type { Log, LogAdd, LogRemove, LogProperty } from '@/types/logType'
 import { isValidItemPos } from '@/composables/item'
 
 
@@ -297,8 +297,11 @@ export const useVideoInfoStore = defineStore('videoInfo', () => {
   const width = ref(1280);
   const height = ref(720);
   const hz = ref(48000);
+  const isAutoVideoBitrate = ref(true);
+  const videoBitrate = ref<number>(6_000_000);
+  const audioBitrate = ref<number>(192_000);
 
-  return { fps, width, height, hz }
+  return { fps, width, height, hz, isAutoVideoBitrate, videoBitrate, audioBitrate }
 }, {
   persist: {
     storage: localStorage,

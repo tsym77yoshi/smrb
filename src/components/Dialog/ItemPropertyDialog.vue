@@ -101,8 +101,8 @@ import {
   type ItemProperty,
   type VarNumbers,
   dropDowns,
-} from "@/type/itemType";
-import { itemPropertyGroups as loadItemPropertyGroups } from "@/type/itemType";
+} from "@/types/itemType";
+import { itemPropertyGroups as loadItemPropertyGroups } from "@/types/itemType";
 import NumberPropertyForm from "./NumberPropertyForm.vue";
 import VarNumberPropertyForm from "./VarNumberPropertyForm.vue";
 import { getNumberForm, type NumberForm } from "./getNumberForm";

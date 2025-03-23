@@ -1,4 +1,4 @@
-import type{ VarNumbers, ItemProperty } from "@/type/itemType";
+import type{ VarNumbers, ItemProperty } from "@/types/itemType";
 
 export type NumberForm = {
   min: number;

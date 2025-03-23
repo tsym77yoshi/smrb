@@ -9,7 +9,7 @@ import type {
   ShapeItem,
   //AudioItem,
   //VideoItem,
-} from "@/type/itemType";
+} from "@/types/itemType";
 import { useFileStore } from "@/store/fileStore";
 import { useVideoInfoStore } from "@/store/tlStore";
 import type { ItemOption } from "./rendererTypes";
@@ -32,13 +32,12 @@ export class Renderer {
   #effectLoader: EffectLoader;
   #textureStore: TextureStore;
 
-  constructor(canv: HTMLCanvasElement) {
-    const tempGl = canv.getContext("webgl");
-    if (!tempGl) {
+  constructor(inputgl: WebGLRenderingContext | null) {
+    if (!inputgl) {
       alert("WebGLがサポートされていません");
       throw new Error("WebGL not supported");
     }
-    this.#gl = tempGl;
+    this.#gl = inputgl;
 
     // ブレンディングを有効にする
     this.#gl.enable(this.#gl.BLEND);

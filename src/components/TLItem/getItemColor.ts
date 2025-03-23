@@ -1,4 +1,4 @@
-import type { TLItem } from "@/type/itemType";
+import type { TLItem } from "@/types/itemType";
 
 export const getItemColor = (item: TLItem): string => {
   if(item.isHidden) {

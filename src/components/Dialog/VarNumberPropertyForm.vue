@@ -13,8 +13,8 @@
 import { computed, ref } from "vue";
 import AnimationTypeDialog from "./AnimationTypeDialog.vue";
 import NumberPropertyForm from "./NumberPropertyForm.vue";
-import type { ItemProperty, TLItem, VarNumbers, AnimationType, KeyFrames } from "@/type/itemType";
-import { getAnimationValuesType } from "@/type/itemType";
+import type { ItemProperty, TLItem, VarNumbers, AnimationType, KeyFrames } from "@/types/itemType";
+import { getAnimationValuesType } from "@/types/itemType";
 import type { ItemPropertyView } from "./ItemPropertyDialog.vue"
 import type { NumberForm } from "./getNumberForm"
 

@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import ItemName from "@/components/TLItem/ItemName.vue";
-import type { Item } from "@/type/itemType"
+import type { Item } from "@/types/itemType"
 
 const props = defineProps<{
   items: Item[]

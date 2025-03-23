@@ -9,7 +9,7 @@
 import { ref, onMounted, watch } from "vue"
 import EditDialog from "@/components/Dialog/EditDialog.vue";
 import ItemPropertyDialog from '@/components/Dialog/ItemPropertyDialog.vue';
-import type { TLItem } from "@/type/itemType";
+import type { TLItem } from "@/types/itemType";
 import {
   useItemsStore,
   useSelectionStore,

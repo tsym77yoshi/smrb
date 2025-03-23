@@ -17,6 +17,7 @@
     "@quasar/extras": "^1.16.12",
     "dexie": "^4.0.10",
     "mime": "^4.0.4",
+    "mux.js": "^6.3.0",
     "pinia": "^2.1.7",
     "pinia-plugin-persistedstate": "^4.1.3",
     "quasar": "^2.17.0",
