@@ -1,3 +1,4 @@
+import { effect } from "vue";
 import type { ColorHEXA } from "./utilityType";
 
 export type Item = (ImageItem /* | TachieItem */ | ShapeItem | VoiceItem | TextItem | AudioItem | VideoItem) & {
@@ -21,6 +22,7 @@ type ItemPropertyTypeMap = {
   ItemType: ItemType;
   BlendMode: BlendMode;
   VideoEffects: VideoEffect[];
+  AudioEffects: AudioEffect[];
   FileId: FileId;
   CharacterName: CharacterName;
   Serif: Serif;
@@ -116,6 +118,12 @@ const videoEffect = {
     videoEffects: { propertyType: "VideoEffects", name: "映像エフェクト", },
   }
 } as const;
+const audioEffect = {
+  name: "音声エフェクト",
+  properties: {
+    audioEffects: { propertyType: "AudioEffects", name: "音声エフェクト", },
+  }
+} as const;
 
 const fileProperty = {
   fileId: { propertyType: "FileId", name: "ファイル", },// YMMと違うところ
@@ -187,8 +195,8 @@ export const itemPropertyGroups/* : Record<string, ItemPropertyGroup[]> */ = {
         ...timeChangeProperty,
       }
     },
-    // echo,
-    // audioEffect,
+    echo,
+    audioEffect,
     {
       name: "字幕",
       properties: {
@@ -224,8 +232,8 @@ export const itemPropertyGroups/* : Record<string, ItemPropertyGroup[]> */ = {
         ...timeChangeProperty,
       }
     },
-    // echo,
-    // audioEffect
+    echo,
+    audioEffect,
     videoEffect,
   ],
   audio: [
@@ -238,8 +246,8 @@ export const itemPropertyGroups/* : Record<string, ItemPropertyGroup[]> */ = {
         ...timeChangeProperty,
       }
     },
-    // echo,
-    // audioEffect
+    echo,
+    audioEffect,
   ],
   image: [
     itemCommon,
@@ -300,10 +308,11 @@ const drawingItem = [
 export type DrawingItem = ToItemType<typeof drawingItem>;
 
 // isEnabledは別でつける
-type EffectPropertyGroup = ItemPropertyGroup & {
+export type EffectPropertyGroup = ItemPropertyGroup & {
   searchName?: string;// 検索時に利用される別名
 }
-export const videoEffectGroup: Record<string, EffectPropertyGroup> = {
+// VideoEffect
+export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   centerPointEffect: {
     name: "中心位置",
     properties: {
@@ -465,30 +474,34 @@ export const videoEffectGroup: Record<string, EffectPropertyGroup> = {
       isHardBorderMode: { propertyType: "boolean", name: "サイズを固定", },
     }
   },
-}
-export const inOutEffectCommonProperties = {
+} as const;
+
+const inOutEffectCommonProperties/* : EffectPropertyGroup["properties"] */ = {
   isInEffect: { propertyType: "boolean", name: "登場時", },
   isOutEffect: { propertyType: "boolean", name: "退場時", },
   effectTimeSeconds: { propertyType: "number", name: "効果時間", unit: "秒", min: 0, range: 0.5, step: 0.01 },
   easingType: { propertyType: "EasingType", name: "種類" },
   easingMode: { propertyType: "EasingMode", name: "加減速" },
-}
-export const inOutEffectGroup: Record<string, EffectPropertyGroup> = {
+} as const;
+export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   inOutGaussianBlurEffect: {
     name: "ぼかしを解除しながら登場退場",
     properties: {
+      ...inOutEffectCommonProperties,
       value: { propertyType: "number", name: "ぼかし度", min: 0, range: 10, },
     }
   },
   inOutMosaicEffect: {
     name: "モザイクを解除しながら登場退場",
     properties: {
+      ...inOutEffectCommonProperties,
       value: { propertyType: "number", name: "サイズ", unit: "px", min: 0, range: 590, },
     }
   },
   inOutMoveEffect: {
     name: "移動しながら登場退場",
     properties: {
+      ...inOutEffectCommonProperties,
       value: { propertyType: "number", name: "X", unit: "px", range: 500, },
       value1: { propertyType: "number", name: "Y", unit: "px", range: 500, },
       value2: { propertyType: "number", name: "Z", unit: "px", range: 500, },
@@ -497,12 +510,14 @@ export const inOutEffectGroup: Record<string, EffectPropertyGroup> = {
   inOutMoveFromOutsideFrameEffect: {
     name: "画面外から登場退場",
     properties: {
+      ...inOutEffectCommonProperties,
       value: { propertyType: "Direction", name: "方向" },
     }
   },
   inOutRotateEffect: {
     name: "回転しながら登場退場",
     properties: {
+      ...inOutEffectCommonProperties,
       valueX: { propertyType: "number", name: "X軸", unit: "°", range: 360, },
       valueY: { propertyType: "number", name: "Y軸", unit: "°", range: 360, },
       valueZ: { propertyType: "number", name: "Z軸", unit: "°", range: 360, },
@@ -512,6 +527,7 @@ export const inOutEffectGroup: Record<string, EffectPropertyGroup> = {
   inOutZoomEffect: {
     name: "拡大しながら登場退場",
     properties: {
+      ...inOutEffectCommonProperties,
       value: { propertyType: "number", name: "全体", unit: "%", min: 0, range: 400, },
       x: { propertyType: "number", name: "横方向", unit: "%", range: 400, },
       y: { propertyType: "number", name: "縦方向", unit: "%", range: 400, },
@@ -520,12 +536,14 @@ export const inOutEffectGroup: Record<string, EffectPropertyGroup> = {
   /* inOutGetUpEffect:{
     name:"起き上がりながら登場退場",
     properties:{
+      ...inOutEffectCommonProperties,
       effectTimeSeconds: {propertyType:"number",name:"効果時間",unit:"秒",min:0,range:0.5,step:0.01},
     }
   }, */
   inOutJumpEffect: {
     name: "跳ねながら登場退場",
     properties: {
+      ...inOutEffectCommonProperties,
       // 跳ねる 着地 移動先で分かれているが一緒にしてしまっているので名前を変更
       jumpHeight: { propertyType: "number", name: "跳ね高さ", unit: "px", min: 0, range: 500, },
       stretch: { propertyType: "number", name: "跳ね伸び", unit: "%", min: 0, range: 30, },
@@ -539,12 +557,38 @@ export const inOutEffectGroup: Record<string, EffectPropertyGroup> = {
   inOutMoveFromOutsideImageEffect: {
     name: "領域外から登場退場",
     properties: {
+      ...inOutEffectCommonProperties,
       value: { propertyType: "Direction", name: "方向" },
     }
   },
-}
-
-export type VideoEffect = { name: string, value: number }
+} as const;
+export const allVideoEffects = {
+  ...videoEffectGroup,
+  ...inOutEffectGroup,
+} as const;
+export const auidoEffectGroup = {
+  echoEffect:{
+    name:"エコー",
+    properties:{
+      strength: {propertyType:"VarNumbers",name:"強度",unit:"%",min:0,max:100,},
+      delay: {propertyType:"VarNumbers",name:"遅延",unit:"秒",min:0,range:0.5,step:0.01,},
+      feedBack:{propertyType:"VarNumbers",name:"フィードバック",unit:"%",min:0,max:100,},
+    }
+  },
+} as const;
+export type ToEffectType<T extends Readonly<EffectPropertyGroup>, U extends string> = UnionToIntersection<Convert<T["properties"]>> & {
+  type: U;// hideLevel alywas
+  isEnabled: boolean;// hideLevel alywas
+};
+export type VideoEffectType = keyof typeof allVideoEffects;
+export type AudioEffectType = keyof typeof auidoEffectGroup;
+export type EffectType = VideoEffectType | AudioEffectType;
+export type VideoEffect = {
+  [K in keyof typeof allVideoEffects]: ToEffectType<(typeof allVideoEffects)[K], K>
+}[keyof typeof allVideoEffects];
+export type AudioEffect = {
+  [K in keyof typeof auidoEffectGroup]: ToEffectType<(typeof auidoEffectGroup)[K], K>
+}[keyof typeof auidoEffectGroup];
 
 export type KeyFrames = {
   frames: number[];

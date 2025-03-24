@@ -80,6 +80,12 @@ itemProperty, propertyKey, index2
                     :options="dropDowns[itemProperty.propertyType as keyof typeof dropDowns]"
                     @update:model-value="(value) => overwriteVal(value.value, propertyKey, true)" />
                 </div>
+
+                <!-- エフェクト -->
+                <EffectProperty
+                  v-else-if="itemProperty.propertyType == 'VideoEffects'"
+                  :changeVal="overwriteVal"
+                />
               </div>
             </div>
           </q-card-section>
@@ -105,6 +111,7 @@ import {
 import { itemPropertyGroups as loadItemPropertyGroups } from "@/types/itemType";
 import NumberPropertyForm from "./NumberPropertyForm.vue";
 import VarNumberPropertyForm from "./VarNumberPropertyForm.vue";
+import EffectProperty from "./EffectProperty.vue";
 import { getNumberForm, type NumberForm } from "./getNumberForm";
 
 const editDialog = ref()

@@ -1,4 +1,4 @@
-import type { TLItem } from "@/types/itemType";
+import type { TLItem, EffectType, VideoEffect, AudioEffect } from "@/types/itemType";
 
 export type Log = LogAdd | LogRemove | LogProperty /* | LogSelect */ | LogFailed;
 export type LogAdd = {
