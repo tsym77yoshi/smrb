@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue"
 import EditDialog from "@/components/Dialog/ItemPropertyEditDialog.vue";
-import ItemPropertyDialog from '@/components/Dialog/EditPropertyDialog/ItemPropertyDialog.vue';
+import ItemPropertyDialog from '@/components/Dialog/EditPropertyDialog/ItemPropertyGroups.vue';
 import type { TLItem } from "@/types/itemType";
 import {
   useItemsStore,

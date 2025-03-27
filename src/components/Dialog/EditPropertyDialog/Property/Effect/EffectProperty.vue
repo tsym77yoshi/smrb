@@ -10,7 +10,7 @@
     <q-btn @click="addEffect" label="追加" color="primary" />
     <q-btn @click="removeEffect" :disable="!effects.length" label="削除" color="primary" />
     <PropertyGroups v-if="selectedIndex >= 0" :propertyGroups="editEffect" v-slot="{ property, propertyKey }">
-      <Property v-bind="{
+      <PropertyForm v-bind="{
         property: property,
         propertyKey: propertyKey,
         diffVal: () => { },
@@ -28,7 +28,7 @@ import { allVideoEffects, type VideoEffect, type AudioEffect, auidoEffectGroup, 
 // 後で移動
 import { defaultVideoEffects } from "@/data/defaultEffects";
 import PropertyGroups from "../../PropertyGroups.vue";
-import Property from "../PropertyForm.vue";
+import PropertyForm from "../PropertyForm.vue";
 import { propertyGroupToPropertyView } from "../../getPropertyView";
 import type { PropertyGroupView, PropertyView } from "../../propertyViewTypes";
 

@@ -19,3 +19,4 @@ export type NumberForm = {
 };
 export type DiffValFuncType = (itemIds: number[], itemPropertyKey: keyof TLItem, value: unknown, orignalVals: unknown[], isSet: boolean) => void;
 export type OverwriteValFuncType = (itemIds: number[], itemPropertyKey: keyof TLItem, value: unknown, orignalVals: unknown[], isSet: boolean) => void;
+export type ChangeIsEdigtingFuncType = (editState: "start" | "end" | "set") => void

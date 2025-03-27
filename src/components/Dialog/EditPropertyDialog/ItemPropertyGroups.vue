@@ -14,7 +14,7 @@
           keyFrames: targetItems[0].keyFrames,
         }" />
 
-      <PropertyDialog v-else v-bind="{
+      <PropertyForm v-else v-bind="{
         property: property,
         propertyKey: propertyKey,
         diffVal: diffVal,
@@ -38,7 +38,7 @@ import type {
 import { itemPropertyGroups as loadItemPropertyGroups } from "@/types/itemType";
 import EffectProperty from "./Property/Effect/EffectProperty.vue";
 import PropertyGroups from "./PropertyGroups.vue";
-import PropertyDialog from "./Property/PropertyForm.vue";
+import PropertyForm from "./Property/PropertyForm.vue";
 import { propertyGroupToPropertyView } from "./getPropertyView";
 import type { PropertyGroupView, DiffValFuncType, OverwriteValFuncType } from "./propertyViewTypes";
 
