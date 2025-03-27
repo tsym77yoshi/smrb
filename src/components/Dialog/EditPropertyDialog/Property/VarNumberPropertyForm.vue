@@ -13,12 +13,12 @@
 import { computed, ref } from "vue";
 import AnimationTypeDialog from "../Property/AnimationTypeDialog.vue";
 import NumberPropertyForm from "./NumberPropertyForm.vue";
-import type { ItemProperty, TLItem, VarNumbers, AnimationType, KeyFrames } from "@/types/itemType";
+import type { Property, TLItem, VarNumbers, AnimationType, KeyFrames } from "@/types/itemType";
 import { getAnimationValuesType } from "@/types/itemType";
-import type { NumberForm, ItemPropertyView } from "../propertyViewType"
+import type { NumberForm, PropertyView } from "../propertyViewTypes"
 
 const props = defineProps<{
-  itemProperty: ItemPropertyView,
+  property: PropertyView,
   propertyKey: keyof TLItem,
   changeIsEditing: (editState: "start" | "end" | "set") => void,
   changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => void,
@@ -27,7 +27,7 @@ const props = defineProps<{
 
 const anmDialog = ref()
 
-const stepItemProperty: ItemProperty = {
+const stepItemProperty: Property = {
   propertyType: "number",
   name: "ステップ",
   unit: "秒",
@@ -42,7 +42,7 @@ const stepNumberForm: NumberForm = {
 }
 
 type bindType = {
-  itemProperty: ItemPropertyView,
+  property: PropertyView,
   propertyKey: keyof TLItem,
   changeIsEditing: (editState: "start" | "end" | "set") => void,
   changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => void,
@@ -50,7 +50,7 @@ type bindType = {
 }
 
 const binds = computed<bindType[]>(() => {
-  const valModel = props.itemProperty.valueModel as VarNumbers;
+  const valModel = props.property.valueModel as VarNumbers;
   const valuesType = getAnimationValuesType(valModel.animationType);
 
   if (valuesType == undefined) {
@@ -59,7 +59,7 @@ const binds = computed<bindType[]>(() => {
   }
   else if (valuesType == "none") {
     return [{
-      itemProperty: getNewItemProperty(0),
+      property: getNewItemProperty(0),
       propertyKey: props.propertyKey,
       changeIsEditing: props.changeIsEditing,
       changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
@@ -70,14 +70,14 @@ const binds = computed<bindType[]>(() => {
   }
   else if (valuesType == "span") {
 
-    const newItemPropertySpan: ItemPropertyView = {
+    const newItemPropertySpan: PropertyView = {
       ...stepItemProperty,
-      valueModel: props.itemProperty.valueModel.span,
+      valueModel: props.property.valueModel.span,
       numberForm: stepNumberForm,
     }
 
     return [{
-      itemProperty: getNewItemProperty(0),
+      property: getNewItemProperty(0),
       propertyKey: props.propertyKey,
       changeIsEditing: props.changeIsEditing,
       changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
@@ -85,7 +85,7 @@ const binds = computed<bindType[]>(() => {
       },
       option: 'VarNumbers',
     }, {
-      itemProperty: getNewItemProperty(1),
+      property: getNewItemProperty(1),
       propertyKey: props.propertyKey,
       changeIsEditing: props.changeIsEditing,
       changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
@@ -93,7 +93,7 @@ const binds = computed<bindType[]>(() => {
       },
       option: 'VarNumbers',
     }, {
-      itemProperty: newItemPropertySpan,
+      property: newItemPropertySpan,
       propertyKey: props.propertyKey,
       changeIsEditing: props.changeIsEditing,
       changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
@@ -104,7 +104,7 @@ const binds = computed<bindType[]>(() => {
   }
   else if (valuesType == "keyFrames") {
     return Array.from({ length: props.keyFrames.count+2 }, (_, index) => {return {
-      itemProperty: getNewItemProperty(index),
+      property: getNewItemProperty(index),
       propertyKey: props.propertyKey,
       changeIsEditing: props.changeIsEditing,
       changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
@@ -118,25 +118,25 @@ const binds = computed<bindType[]>(() => {
 
 // コピーしたうえでvalueを更新
 const getNewItemProperty = (index: number) => {
-  const newItemProperty = JSON.parse(JSON.stringify(props.itemProperty)) as ItemPropertyView;
-  newItemProperty.valueModel = props.itemProperty.valueModel.values[index].value;
+  const newItemProperty = JSON.parse(JSON.stringify(props.property)) as PropertyView;
+  newItemProperty.valueModel = props.property.valueModel.values[index].value;
   return newItemProperty;
 }
 
 const changeVarVal = (value: unknown, key: keyof TLItem, isSet: boolean, index: number) => {
-  let newVal = JSON.parse(JSON.stringify(props.itemProperty.valueModel)) as VarNumbers;
+  let newVal = JSON.parse(JSON.stringify(props.property.valueModel)) as VarNumbers;
   newVal.values[index].value = value as number;
   props.changeVal(newVal, key, isSet, "VarNumbers")
 }
 
 const changeSpanVal = (value: unknown, key: keyof TLItem, isSet: boolean) => {
-  let newVal = JSON.parse(JSON.stringify(props.itemProperty.valueModel)) as VarNumbers;
+  let newVal = JSON.parse(JSON.stringify(props.property.valueModel)) as VarNumbers;
   newVal.span = value as number;
   props.changeVal(newVal, key, isSet, "VarNumbers")
 }
 
 const setAnimationType = (name: AnimationType) => {
-  let newVal = JSON.parse(JSON.stringify(props.itemProperty.valueModel)) as VarNumbers;
+  let newVal = JSON.parse(JSON.stringify(props.property.valueModel)) as VarNumbers;
 
   const valuesType = getAnimationValuesType(name);
   if (valuesType == "none") {

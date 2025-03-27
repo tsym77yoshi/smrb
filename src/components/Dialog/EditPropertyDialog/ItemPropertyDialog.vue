@@ -1,21 +1,21 @@
 <!-- アイテムのプロパティを表示する、下側からでてくるダイアログ -->
 <template>
   <div>
-    <PropertyGroups :item-groups="editData" v-slot="{ itemProperty, propertyKey }">
+    <PropertyGroups :propertyGroups="editData" v-slot="{ property, propertyKey }">
       <!-- エフェクト -->
-      <EffectProperty v-if="itemProperty.propertyType == 'VideoEffects' || itemProperty.propertyType == 'AudioEffects'"
+      <EffectProperty v-if="property.propertyType == 'VideoEffects' || property.propertyType == 'AudioEffects'"
         v-bind="{
-          itemProperty: itemProperty,
+          property: property,
           propertyKey: propertyKey,
           diffVal: diffVal,
           overwriteVal: overwriteVal,
           changeIsEditing: changeIsEditing,
-          original: editDataOriginals[0][propertyKey as keyof TLItem] as unknown as VideoEffect[] | AudioEffect[],
+          original: editItemOriginals[0][propertyKey as keyof TLItem] as unknown as VideoEffect[] | AudioEffect[],
           keyFrames: targetItems[0].keyFrames,
         }" />
 
       <PropertyDialog v-else v-bind="{
-        itemProperty: itemProperty,
+        property: property,
         propertyKey: propertyKey,
         diffVal: diffVal,
         overwriteVal: overwriteVal,
@@ -29,21 +29,18 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import {
-  useSettingStore,
-} from "@/store/tlStore";
 import type {
   TLItem,
-  ItemPropertyGroup,
+  PropertyGroup,
   VideoEffect,
   AudioEffect,
 } from "@/types/itemType";
 import { itemPropertyGroups as loadItemPropertyGroups } from "@/types/itemType";
 import EffectProperty from "./Property/Effect/EffectProperty.vue";
 import PropertyGroups from "./PropertyGroups.vue";
-import PropertyDialog from "./Property/Property.vue";
+import PropertyDialog from "./Property/PropertyForm.vue";
 import { propertyGroupToPropertyView } from "./getPropertyView";
-import type { ItemPropertyGroupView } from "./propertyViewType";
+import type { PropertyGroupView, DiffValFuncType, OverwriteValFuncType } from "./propertyViewTypes";
 
 const editDialog = ref()
 const show = () => {
@@ -52,17 +49,16 @@ const show = () => {
 
 const props = defineProps<{
   targetItems: TLItem[],
-  diffVal: (ids: number[], key: keyof TLItem, value: unknown, orignalVals: unknown[], isSet: boolean) => void,
-  overwriteVal: (ids: number[], key: keyof TLItem, value: unknown, orignalVals: unknown[], isSet: boolean) => void,
+  diffVal: DiffValFuncType,
+  overwriteVal: OverwriteValFuncType,
 }>();
 
 
 const itemPropertyGroups = loadItemPropertyGroups as unknown as Record<
   string,
-  ItemPropertyGroup[]
+  PropertyGroup[]
 >;
-const setting = useSettingStore();
-const editData = computed<ItemPropertyGroupView[]>(() => {
+const editData = computed<PropertyGroupView[]>(() => {
   if (!isEditing.value) {
     changeIsEditing("set");
   }
@@ -71,11 +67,11 @@ const editData = computed<ItemPropertyGroupView[]>(() => {
     // nameが被っていないGroupを削除
     for (let i = 1; i < props.targetItems.length; i++) {
       const searchGroupNames = itemPropertyGroups[props.targetItems[i].type].map(
-        (itemGroup) => itemGroup.name
+        (itemPropertyGroup) => itemPropertyGroup.name
       );
       const removeGroupNames = resultItemGroups
-        .map((itemGroup) => itemGroup.name)
-        .filter((itemKeysName) => !searchGroupNames.includes(itemKeysName));
+        .map((itemPropertyGroup) => itemPropertyGroup.name)
+        .filter((itemPropertyGroupName) => !searchGroupNames.includes(itemPropertyGroupName));
 
       resultItemGroups = resultItemGroups.filter(
         (itemGroup) => !removeGroupNames.includes(itemGroup.name)
@@ -89,14 +85,14 @@ const editData = computed<ItemPropertyGroupView[]>(() => {
 
 
 // 変更前のデータ
-let editDataOriginals: TLItem[] = [];
+let editItemOriginals: TLItem[] = [];
 const isEditing = ref<boolean>(false);
 const changeIsEditing = (editState: "start" | "end" | "set") => {
   if (editState == "start" || editState == "set") {
     if (editState == "start") {
       isEditing.value = true;
     }
-    editDataOriginals = JSON.parse(JSON.stringify(props.targetItems));
+    editItemOriginals = JSON.parse(JSON.stringify(props.targetItems));
   } else if (editState == "end") {
     isEditing.value = false;
   } else {
@@ -111,8 +107,8 @@ const diffVal = (value: unknown, key: keyof TLItem, isSet: boolean, option?: "Va
   if (!isEditing.value) {
     changeIsEditing("start");
   }
-  const originalVals = editDataOriginals.map((item) => item[key]) as number[]
-  props.diffVal(editDataOriginals.map((item) => item.id), key, (value as number) - originalVals[0], originalVals, isSet);
+  const originalVals = editItemOriginals.map((item) => item[key]) as number[]
+  props.diffVal(editItemOriginals.map((item) => item.id), key, (value as number) - originalVals[0], originalVals, isSet);
   if (isSet) {
     changeIsEditing("end");
   }
@@ -121,7 +117,7 @@ const overwriteVal = (value: unknown, key: keyof TLItem, isSet: boolean, option?
   if (!isEditing.value) {
     changeIsEditing("start");
   }
-  props.overwriteVal(editDataOriginals.map((item) => item.id), key, value, editDataOriginals.map((item) => item[key]), isSet);
+  props.overwriteVal(editItemOriginals.map((item) => item.id), key, value, editItemOriginals.map((item) => item[key]), isSet);
   if (isSet) {
     changeIsEditing("end");
   }

@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import FootToolButton from "./FootToolButton.vue";
 import type { LogAdd, LogProperty } from "@/types/logType";
-import type { Item, AudioItem, VarNumbers, ItemProperty } from "@/types/itemType";
+import type { Item, AudioItem, VarNumbers, Property } from "@/types/itemType";
 import { isAudioItem, itemPropertyGroups, getAnimationValuesType } from "@/types/itemType";
 import { useItemsStore, useSelectionStore, useStateStore, useLogStore, useVideoInfoStore } from "@/store/tlStore";
 import { animation } from "@/data/animationCurve";

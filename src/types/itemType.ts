@@ -1,7 +1,6 @@
-import { effect } from "vue";
 import type { ColorHEXA } from "./utilityType";
 
-export type Item = (ImageItem /* | TachieItem */ | ShapeItem | VoiceItem | TextItem | AudioItem | VideoItem) & {
+export type Item = (ImageItem | TachieItem | ShapeItem | VoiceItem | TextItem | AudioItem | VideoItem) & {
   id?: number;
 }
 export const isAudioItem = (itemType: ItemType): boolean => {
@@ -12,8 +11,8 @@ export type TLItem = Item & {
 };
 export type ItemKey = keyof TLItem
 
-// json.stringfyを使ってdeepcopyをする場面(timeline.vue)があるのでundefinedは使わないように
-type ItemPropertyTypeMap = {
+// json.stringfyを使ってdeepcopyをする場面があるのでundefinedは使わないように
+type PropertyTypeMap = {
   number: number;
   KeyFrames: KeyFrames;// キーフレーム専用
   VarNumbers: VarNumbers;// 中間点をつけられる時間変化で動くことを想定しているものに対して
@@ -42,9 +41,9 @@ type ItemPropertyTypeMap = {
   EasingType: EasingType;
   EasingMode: EasingMode;
 };
-type ItemPropertyType = keyof ItemPropertyTypeMap;
-export type ItemProperty = {
-  propertyType: ItemPropertyType;
+type PropertyType = keyof PropertyTypeMap;
+export type Property = {
+  propertyType: PropertyType;
   name: string;
   unit?: string;
   min?: number;
@@ -57,27 +56,28 @@ export type HideLevel =
   undefined |// 表示する
   "always" |// 常に表示しない
   "unimplemented" |// 未実装なので表示しない
-  "advanced";// 高度な機能がオンの時だけ実装
-export type ItemPropertyGroup = {
+  "advanced" |// 高度な機能がオンの時だけ表示
+  "3d"// 3D機能なので非表示
+  ;
+export type PropertyGroup = {
   name: string;
-  properties: Record<string, ItemProperty>;
+  properties: Record<string, Property>;
 }
-// なんでここでT extends ItemKeysが要るかわからんが、ないとTがunion型の時に正常に動作しない
-type Convert<T extends Record<string, ItemProperty>> = T extends Record<string, ItemProperty> ? {
+// なぜここでT extends ItemKeysが要るかわからんが、ないとTがunion型の時に正常に動作しない
+type Convert<T extends Record<string, Property>> = T extends Record<string, Property> ? {
   -readonly [K in keyof T]:
-  T[K]["propertyType"] extends keyof ItemPropertyTypeMap
-  ? ItemPropertyTypeMap[T[K]["propertyType"]]
+  T[K]["propertyType"] extends keyof PropertyTypeMap
+  ? PropertyTypeMap[T[K]["propertyType"]]
   : never;
 } : never;
-type Convert2<T extends ItemPropertyGroup> = T extends ItemPropertyGroup ? Convert<T["properties"]> : never;
+type Convert2<T extends PropertyGroup> = T extends PropertyGroup ? Convert<T["properties"]> : never;
 type UnionToIntersection<T> =
   (T extends any ? (U: T) => void : never) extends
   ((U: infer R) => void) ? R : never;
-type ToItemType<T extends ReadonlyArray<ItemPropertyGroup>> = UnionToIntersection<Convert2<T[number]>>;
+type ToItemType<T extends ReadonlyArray<PropertyGroup>> = UnionToIntersection<Convert2<T[number]>>;
 
-// :ItemKeys <===ここの下のobjectたちは型宣言してはダメ！任意の値が入るようになっちゃう！かも
-// ちなみに、不正な値を入れると後の Convert<typeof > のところで怒られるよ！
-// テスト書きたいけど厳し～
+// :ItemKeys <===ここの下のobjectたちは型宣言してはだめそうです。任意の値が入るようになってしまうため
+// ちなみに、不正な値を入れると後の Convert<typeof > のところでエラーがでます
 // 検証用： : Record<string, ItemProperty>
 const itemCommon = {
   name: "全般",
@@ -94,7 +94,7 @@ const itemCommon = {
 const drawingPropertiesWithoutFade = {
   x: { propertyType: "VarNumbers", name: "X", unit: "px", range: 500, },// 中心を0
   y: { propertyType: "VarNumbers", name: "Y", unit: "px", range: 500, },
-  z: { propertyType: "VarNumbers", name: "Z", unit: "px", range: 500, hideLevel: "unimplemented" },
+  z: { propertyType: "VarNumbers", name: "Z", unit: "px", range: 500, hideLevel: "3d" },
   opacity: { propertyType: "VarNumbers", name: "不透明度", unit: "%", min: 0, max: 100 },
   zoom: { propertyType: "VarNumbers", name: "拡大率", unit: "%", min: 0, range: 100 },
   rotation: { propertyType: "VarNumbers", name: "回転角", unit: "°", range: 360 },
@@ -102,7 +102,7 @@ const drawingPropertiesWithoutFade = {
   isInverted: { propertyType: "boolean", name: "左右反転", },
   isClippingWithObjectAbove: { propertyType: "boolean", name: "クリッピング", hideLevel: "unimplemented", },
   isAlwaysOnTop: { propertyType: "boolean", name: "手前に表示", hideLevel: "unimplemented", },
-  isZOrderEnabled: { propertyType: "boolean", name: "Z値順に表示", hideLevel: "unimplemented", },
+  isZOrderEnabled: { propertyType: "boolean", name: "Z値順に表示", hideLevel: "3d", },
 } as const;
 const drawing = {
   name: "描画",
@@ -136,7 +136,7 @@ const timeChangeProperty = {
 const characterProperty = {
   characterName: { propertyType: "CharacterName", name: "キャラクター", }
 } as const;
-// VoiceItemでaudioPropertyをハードコードしている点に注意
+// VoiceItemでaudioPropertyに似たものを別でかいている点に注意
 const audioProperty = {
   volume: { propertyType: "VarNumbers", name: "音量", unit: "%", min: 0, range: 100, },
   pan: { propertyType: "VarNumbers", name: "パン", unit: "%", min: -100, max: 100 },
@@ -174,8 +174,8 @@ const shapeProperty = {
   color: { propertyType: "ColorHEXA", name: "色", },
 } as const;
 
-// これのkey名はtypeと一致させること Record<ItemType,ItemPropertyGroup[]>型
-export const itemPropertyGroups/* : Record<string, ItemPropertyGroup[]> */ = {
+// これのkey名はtypeと一致させること Record<ItemType,PropertyGroup[]>型
+export const itemPropertyGroups/* : Record<string, PropertyGroup[]> */ = {
   voice: [
     itemCommon,
     {
@@ -291,14 +291,7 @@ export type VideoItem = ToItemType<typeof itemPropertyGroups["video"]>;// 動画
 export type AudioItem = ToItemType<typeof itemPropertyGroups["audio"]>;// 音声
 export type ImageItem = ToItemType<typeof itemPropertyGroups["image"]>;// 画像
 export type ShapeItem = ToItemType<typeof itemPropertyGroups["shape"]>;// 図形
-//export type TachieItem = ItemCommon & Visible & Character & Tachie;
-/* const test: ImageItem = {
-
-} */
-
-//console.log(JSON.stringify(itemPropertyGroups["image"].map((group)=>Object.keys(group.properties)),null,2).replaceAll('"',""))
-
-
+export type TachieItem = ToItemType<typeof itemPropertyGroups["tachie"]>;// 立ち絵
 /**renderer.ts用 */
 const drawingItem = [
   itemCommon,
@@ -307,8 +300,9 @@ const drawingItem = [
 ] as const;
 export type DrawingItem = ToItemType<typeof drawingItem>;
 
-// isEnabledは別でつける
-export type EffectPropertyGroup = ItemPropertyGroup & {
+
+//// Effect
+export type EffectPropertyGroup = PropertyGroup & {
   searchName?: string;// 検索時に利用される別名
 }
 // VideoEffect
@@ -410,6 +404,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
       right: { propertyType: "VarNumbers", name: "右", unit: "px", min: 0, range: 100, },
     }
   },
+  // 複雑だったので後回し
   /* gradientEffect: {
     name: "グラデーション",
     properties: {
@@ -447,7 +442,6 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   jumpEffect: {
     name: "跳ねる",
     properties: {
-      // 跳ねる 着地 移動先で分かれているが一緒にしてしまっているので名前を変更
       jumpHeight: { propertyType: "VarNumbers", name: "跳ね高さ", unit: "px", min: 0, range: 500, },
       stretch: { propertyType: "VarNumbers", name: "跳ね伸び", unit: "%", min: 0, range: 30, },
       period: { propertyType: "VarNumbers", name: "跳ね周期", unit: "秒", min: 0, range: 1, step: 0.01, },
@@ -513,7 +507,7 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
       ...inOutEffectCommonProperties,
       value: { propertyType: "number", name: "X", unit: "px", range: 500, },
       value1: { propertyType: "number", name: "Y", unit: "px", range: 500, },
-      value2: { propertyType: "number", name: "Z", unit: "px", range: 500, hideLevel: "unimplemented"},
+      value2: { propertyType: "number", name: "Z", unit: "px", range: 500, hideLevel: "3d"},
     }
   },
   inOutMoveFromOutsideFrameEffect: {
@@ -530,7 +524,7 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
       valueX: { propertyType: "number", name: "X軸", unit: "°", range: 360, },
       valueY: { propertyType: "number", name: "Y軸", unit: "°", range: 360, },
       valueZ: { propertyType: "number", name: "Z軸", unit: "°", range: 360, },
-      is3D: { propertyType: "boolean", name: "三次元配置", hideLevel:"unimplemented" },
+      is3D: { propertyType: "boolean", name: "三次元配置", hideLevel:"3d" },
     }
   },
   inOutZoomEffect: {
@@ -542,6 +536,7 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
       y: { propertyType: "number", name: "縦方向", unit: "%", range: 400, },
     }
   },
+  // 複雑だったので後回し
   /* inOutGetUpEffect:{
     name:"起き上がりながら登場退場",
     properties:{
@@ -553,7 +548,6 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
     name: "跳ねながら登場退場",
     properties: {
       ...inOutEffectCommonProperties,
-      // 跳ねる 着地 移動先で分かれているが一緒にしてしまっているので名前を変更
       jumpHeight: { propertyType: "number", name: "跳ね高さ", unit: "px", min: 0, range: 500, },
       stretch: { propertyType: "number", name: "跳ね伸び", unit: "%", min: 0, range: 30, },
       period: { propertyType: "number", name: "跳ね周期", unit: "秒", min: 0, range: 1, step: 0.01, },
@@ -586,8 +580,8 @@ export const auidoEffectGroup = {
   },
 } as const;
 export type ToEffectType<T extends Readonly<EffectPropertyGroup>, U extends string> = UnionToIntersection<Convert<T["properties"]>> & {
-  type: U;// hideLevel alywas
-  isEnabled: boolean;// hideLevel alywas
+  type: U;
+  isEnabled: boolean;
 };
 export type VideoEffectType = keyof typeof allVideoEffects;
 export type AudioEffectType = keyof typeof auidoEffectGroup;
@@ -599,11 +593,12 @@ export type AudioEffect = {
   [K in keyof typeof auidoEffectGroup]: ToEffectType<(typeof auidoEffectGroup)[K], K>
 }[keyof typeof auidoEffectGroup];
 
+//// PropertyTypeMapのEffect以外
 export type KeyFrames = {
   frames: number[];
   count: number;// 処理に使用しない
 }
-
+// イージング関連
 const linearEasingAniamtionType = { label: "等速", value: "Linear", } as const;
 const easingAnimationTypes = [
   { label: "緩急1(弱)", value: "Sine", },
@@ -654,6 +649,7 @@ export const isEasingAnimationType = (animationType: AnimationType): boolean => 
 }
 export type AnimationType = typeof originalAnimationTypes[number]["name"] | `${typeof easingAnimationTypes[number]["value"]}_${typeof easingModeTypes[number]["value"]}`;
 
+// 時間変化できる数字入力
 export type VarNumbers = {
   values: { value: number }[];
   span: number;
@@ -667,8 +663,8 @@ type CharacterName = string;
 type Serif = string;
 type Time = number;// YMM4だと"00:00:00"だが、ここでは秒数で扱う
 type Font = string;
-// dropDownのもの(除:imageとかフォントとか可変の物)
-// itemPropertyTypeの名前そのままにするので大文字スタートで
+// dropDownのもの
+// PropertyTypeの名前そのままにするので大文字スタートで
 export const dropDowns = {
   BlendMode: [
     // 未実装

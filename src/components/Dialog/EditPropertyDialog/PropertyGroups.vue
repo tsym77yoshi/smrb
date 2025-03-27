@@ -1,15 +1,12 @@
 <template>
-  <div v-for="(itemGroup, index) in itemGroups" :key="index">
+  <div v-for="(propertyGroup, index) in propertyGroups" :key="index">
     <q-expansion-item switch-toggle-side expand-separator defaultOpened expand-icon="arrow_drop_down_circle"
-      :label="itemGroup.name">
+      :label="propertyGroup.name">
       <q-card style="background-color: var(--color-background)">
         <q-card-section>
-          <div v-for="(
-itemProperty, propertyKey, index2
-                  ) in itemGroup.properties" :key="index2" style="
-                    margin-bottom: 1rem;
-                  ">
-              <slot :itemProperty="itemProperty" :propertyKey="propertyKey"></slot>
+          <div v-for="(property, propertyKey, index2) in propertyGroup.properties" :key="index2"
+            style="margin-bottom: 1rem;">
+            <slot :property="property" :propertyKey="propertyKey"></slot>
           </div>
         </q-card-section>
       </q-card>
@@ -18,9 +15,9 @@ itemProperty, propertyKey, index2
 </template>
 
 <script setup lang="ts">
-import type { ItemPropertyGroupView } from "./propertyViewType";
+import type { PropertyGroupView } from "./propertyViewTypes";
 import { defineProps } from "vue";
 const props = defineProps<{
-  itemGroups: ItemPropertyGroupView[];
+  propertyGroups: PropertyGroupView[];
 }>();
 </script>

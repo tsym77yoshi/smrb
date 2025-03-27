@@ -1,18 +1,19 @@
 <template>
   <div>
     <div style="border: 1px solid black;padding-bottom: 1rem;">
-      <div v-for="effect, index in effects" :key="index" @click="(e)=>{selectedIndex=index;e.stopPropagation();}"  style="width:100%" :style="{'background-color':selectedIndex==index ? 'var(--color-primary)' : ''}">
+      <div v-for="effect, index in effects" :key="index" @click="(e) => { selectedIndex = index; e.stopPropagation(); }"
+        style="width:100%" :class="{ selectedEffect: selectedIndex == index }">
         <q-checkbox v-model:model-value="effect.isEnabled" @update:model-value="" />
         {{ getEffectLabel(effect, effectType) }}
       </div>
     </div>
     <q-btn @click="addEffect" label="追加" color="primary" />
     <q-btn @click="removeEffect" :disable="!effects.length" label="削除" color="primary" />
-    <PropertyGroups v-if="selectedIndex >= 0" :item-groups="editEffect" v-slot="{ itemProperty, propertyKey }">
+    <PropertyGroups v-if="selectedIndex >= 0" :propertyGroups="editEffect" v-slot="{ property, propertyKey }">
       <Property v-bind="{
-        itemProperty: itemProperty,
+        property: property,
         propertyKey: propertyKey,
-        diffVal: ()=>{},
+        diffVal: () => { },
         overwriteVal: overwriteVal,
         changeIsEditing: changeIsEditing,
         keyFrames: keyFrames
@@ -27,14 +28,14 @@ import { allVideoEffects, type VideoEffect, type AudioEffect, auidoEffectGroup, 
 // 後で移動
 import { defaultVideoEffects } from "@/data/defaultEffects";
 import PropertyGroups from "../../PropertyGroups.vue";
-import Property from "../Property.vue";
-import {propertyGroupToPropertyView} from "../../getPropertyView";
-import type { ItemPropertyGroupView,ItemPropertyView } from "../../propertyViewType";
+import Property from "../PropertyForm.vue";
+import { propertyGroupToPropertyView } from "../../getPropertyView";
+import type { PropertyGroupView, PropertyView } from "../../propertyViewTypes";
 
 
 type EffectsType = "VideoEffects" | "AudioEffects";
 const props = defineProps<{
-  itemProperty: ItemPropertyView,
+  property: PropertyView,
   propertyKey: keyof TLItem,
   changeIsEditing: (editState: "start" | "end" | "set") => void,
   overwriteVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => void,
@@ -43,18 +44,18 @@ const props = defineProps<{
 }>();
 
 const effects = computed<VideoEffect[] | AudioEffect[]>(() => {
-  return props.itemProperty.valueModel as VideoEffect[] | AudioEffect[]
+  return props.property.valueModel as VideoEffect[] | AudioEffect[]
 })
 const effectType = computed<EffectsType>(() => {
-  return props.itemProperty.propertyType as EffectsType
+  return props.property.propertyType as EffectsType
 })
 
-const editEffect = computed<ItemPropertyGroupView[]>(() => {
+const editEffect = computed<PropertyGroupView[]>(() => {
   if (selectedIndex.value < 0 || props.original.length <= selectedIndex.value) {
     return [];
   }
 
-  const model = props.itemProperty.valueModel[selectedIndex.value] as VideoEffect | AudioEffect;
+  const model = props.property.valueModel[selectedIndex.value] as VideoEffect | AudioEffect;
   const targetEffects = effectType.value == "VideoEffects" ? allVideoEffects : auidoEffectGroup
 
   const targetKey = Object.keys(targetEffects).find(key => key == model.type)
@@ -96,7 +97,7 @@ const removeEffect = () => {
   const originalCopy = JSON.parse(JSON.stringify(props.original))
   originalCopy.splice(selectedIndex.value, 1)
 
-  if(originalCopy.length == 0){
+  if (originalCopy.length == 0) {
     selectedIndex.value = -1;
   }
 
@@ -119,5 +120,10 @@ const overwriteEffect = (value: unknown, key: keyof TLItem, isSet: boolean, opti
     isSet,
   )
 }
-
 </script>
+
+<style scoped>
+.selectedEffect {
+  background-color: var(--color-primary);
+}
+</style>

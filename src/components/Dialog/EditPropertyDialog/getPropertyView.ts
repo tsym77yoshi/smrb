@@ -1,43 +1,43 @@
 import type {
   TLItem,
   ItemKey,
-  ItemPropertyGroup,
+  PropertyGroup,
   VarNumbers,
 } from "@/types/itemType";
 import { getNumberForm } from "./Property/getNumberForm";
-import type { ItemPropertyView, ItemPropertyGroupView } from "./propertyViewType";
+import type { PropertyView, PropertyGroupView } from "./propertyViewTypes";
 import { useSettingStore } from "@/store/tlStore";
 
 
 let setting:ReturnType<typeof useSettingStore>;
 
 export const propertyGroupToPropertyView = (
-  itemPropertyGroups: ItemPropertyGroup[],
+  propertyGroups: PropertyGroup[],
   lastSelectedItemOriginal: TLItem,
-): ItemPropertyGroupView[] => {
+): PropertyGroupView[] => {
   if(!setting){
     setting = useSettingStore();
   }
   // hideLevelに応じてpropertyを消す
-  itemPropertyGroups = itemPropertyGroups.map((itemGroup) => {
-    Object.keys(itemGroup.properties)
+  propertyGroups = propertyGroups.map((propertyGroup) => {
+    Object.keys(propertyGroup.properties)
       .filter(
         (key) =>
-          itemGroup.properties[key].hideLevel != undefined &&
+          propertyGroup.properties[key].hideLevel != undefined &&
           !setting.showHideLevels.includes(
-            itemGroup.properties[key].hideLevel
+            propertyGroup.properties[key].hideLevel
           )
       )
-      .forEach((key) => delete itemGroup.properties[key]);
-    return itemGroup;
+      .forEach((key) => delete propertyGroup.properties[key]);
+    return propertyGroup;
   });
   // valueModelを追加していく
   const lastSelectedItem = lastSelectedItemOriginal;
-  return itemPropertyGroups.map((itemGroup) => {
-    let resultItemGroupView: Record<string, ItemPropertyView> = {};
-    Object.keys(itemGroup.properties).map((strKey) => {
+  return propertyGroups.map((propertyGroup) => {
+    let resultPropertiesView: Record<string, PropertyView> = {};
+    Object.keys(propertyGroup.properties).map((strKey) => {
       const key = strKey as ItemKey;
-      const targetProperty = itemGroup.properties[key];
+      const targetProperty = propertyGroup.properties[key];
       const targetPropertyType = targetProperty.propertyType;
       // valueModelのやつ
       let valueModel = undefined;
@@ -55,17 +55,17 @@ export const propertyGroupToPropertyView = (
           numberForm: getNumberForm(targetProperty, targetNumVal)
         }
       }
-      const property: ItemPropertyView = {
-        ...itemGroup.properties[key],
+      const property: PropertyView = {
+        ...propertyGroup.properties[key],
         valueModel: valueModel,
         ...numberForm,
       };
-      resultItemGroupView[key] = property;
+      resultPropertiesView[key] = property;
       return { [key]: property };
     });
     return {
-      name: itemGroup.name,
-      properties: resultItemGroupView,
+      name: propertyGroup.name,
+      properties: resultPropertiesView,
     };
   });
 }

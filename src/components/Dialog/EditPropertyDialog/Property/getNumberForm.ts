@@ -1,7 +1,7 @@
-import type{ VarNumbers, ItemProperty } from "@/types/itemType";
-import type{ NumberForm } from "../propertyViewType";
+import type{ VarNumbers, Property } from "@/types/itemType";
+import type{ NumberForm } from "../propertyViewTypes";
 
-export const getNumberForm = (targetProperty: ItemProperty, targetNumVal: number | VarNumbers): NumberForm => {
+export const getNumberForm = (targetProperty: Property, targetNumVal: number | VarNumbers): NumberForm => {
   let viewMin = 0;
   let viewMax = 100;
   let viewRate = 1;

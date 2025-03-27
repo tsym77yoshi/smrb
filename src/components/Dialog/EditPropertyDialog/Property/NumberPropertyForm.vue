@@ -1,31 +1,31 @@
 <template>
   <div style="position: relative;display: flex;justify-content: space-between;">
-    <q-input v-model.number="props.itemProperty.valueModel" type="number" @focus="changeIsEditing('start')"
+    <q-input v-model.number="property.valueModel" type="number" @focus="changeIsEditing('start')"
       @update:model-value="(value) => {
-          if (isValidNumber(value, itemProperty.numberForm)) {
+          if (isValidNumber(value, property.numberForm)) {
             changeVal(value, propertyKey, false, option)
           }
         }
         " @blur="(value) => {
-          if (isValidNumber(value, itemProperty.numberForm)) {
+          if (isValidNumber(value, property.numberForm)) {
             changeVal(value, propertyKey, true, option)
           }
         }" dense outlined style="width:25%;">
       <template v-slot:append>
         <div style="font-size: 0.75rem;padding-top: 0.25rem;">
-          {{ itemProperty?.unit }}
+          {{ property?.unit }}
         </div>
       </template>
     </q-input>
     <span style="width:70%;display: flex;justify-content: space-between;align-items: center;">
       <span style="position: relative;width:100%">
-        <q-slider v-model="props.itemProperty.valueModel" :min="itemProperty.numberForm?.min"
-          :max="itemProperty.numberForm?.max" :step="itemProperty.numberForm?.step"
+        <q-slider v-model="property.valueModel" :min="property.numberForm?.min"
+          :max="property.numberForm?.max" :step="property.numberForm?.step"
           @update:model-value="(value) => changeVal(value, propertyKey, false, option)"
           @change="(value) => changeVal(value, propertyKey, true, option)" label color="primary"
           style="position: relative;" />
-        <div v-if="itemProperty.numberForm?.rate != 1" style="position: absolute; right: 0; bottom: 0">
-          x{{ itemProperty.numberForm?.rate }}
+        <div v-if="property.numberForm?.rate != 1" style="position: absolute; right: 0; bottom: 0">
+          x{{ property.numberForm?.rate }}
         </div>
       </span>
       <slot name="optionalButton"></slot>
@@ -35,10 +35,10 @@
 
 <script setup lang="ts">
 import type { TLItem } from "@/types/itemType";
-import type { NumberForm, ItemPropertyView } from "../propertyViewType";
+import type { NumberForm, PropertyView } from "../propertyViewTypes";
 
 const props = defineProps<{
-  itemProperty: ItemPropertyView,
+  property: PropertyView,
   propertyKey: keyof TLItem,
   changeIsEditing: (editState: "start" | "end" | "set") => void,
   changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => void,
