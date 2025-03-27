@@ -35,8 +35,7 @@
 
 <script setup lang="ts">
 import type { TLItem } from "@/types/itemType";
-import type { ItemPropertyView } from "./ItemPropertyDialog.vue";
-import type { NumberForm } from "./getNumberForm";
+import type { NumberForm, ItemPropertyView } from "../propertyViewType";
 
 const props = defineProps<{
   itemProperty: ItemPropertyView,

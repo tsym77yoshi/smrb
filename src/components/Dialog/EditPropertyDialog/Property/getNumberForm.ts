@@ -1,13 +1,5 @@
 import type{ VarNumbers, ItemProperty } from "@/types/itemType";
-
-export type NumberForm = {
-  min: number;
-  max: number;
-  validMin: number | undefined;
-  validMax: number | undefined;
-  step: number; // フォームでの数値の刻み。整数なら1, 小数なら基本0.1
-  rate: number; // x2, x3...など
-};
+import type{ NumberForm } from "../propertyViewType";
 
 export const getNumberForm = (targetProperty: ItemProperty, targetNumVal: number | VarNumbers): NumberForm => {
   let viewMin = 0;

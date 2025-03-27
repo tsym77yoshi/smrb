@@ -11,12 +11,11 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import AnimationTypeDialog from "./AnimationTypeDialog.vue";
+import AnimationTypeDialog from "../Property/AnimationTypeDialog.vue";
 import NumberPropertyForm from "./NumberPropertyForm.vue";
 import type { ItemProperty, TLItem, VarNumbers, AnimationType, KeyFrames } from "@/types/itemType";
 import { getAnimationValuesType } from "@/types/itemType";
-import type { ItemPropertyView } from "./ItemPropertyDialog.vue"
-import type { NumberForm } from "./getNumberForm"
+import type { NumberForm, ItemPropertyView } from "../propertyViewType"
 
 const props = defineProps<{
   itemProperty: ItemPropertyView,

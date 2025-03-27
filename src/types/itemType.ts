@@ -474,6 +474,15 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
       isHardBorderMode: { propertyType: "boolean", name: "サイズを固定", },
     }
   },
+  zoomEffect:{
+    name:"拡大縮小",
+    properties:{
+      zoom: { propertyType: "VarNumbers", name: "全体", unit: "%", min: 0, range: 500, },
+      zoomX: { propertyType: "VarNumbers", name: "横方向", unit: "%", range: 500, },
+      zoomY: { propertyType: "VarNumbers", name: "縦方向", unit: "%", range: 500, },
+      isNearestNeighbor: { propertyType: "boolean", name: "ドット絵", },
+    }
+  }
 } as const;
 
 const inOutEffectCommonProperties/* : EffectPropertyGroup["properties"] */ = {
@@ -495,7 +504,7 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
     name: "モザイクを解除しながら登場退場",
     properties: {
       ...inOutEffectCommonProperties,
-      value: { propertyType: "number", name: "サイズ", unit: "px", min: 0, range: 590, },
+      value: { propertyType: "number", name: "サイズ", unit: "px", min: 0, range: 500, },
     }
   },
   inOutMoveEffect: {
@@ -504,7 +513,7 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
       ...inOutEffectCommonProperties,
       value: { propertyType: "number", name: "X", unit: "px", range: 500, },
       value1: { propertyType: "number", name: "Y", unit: "px", range: 500, },
-      value2: { propertyType: "number", name: "Z", unit: "px", range: 500, },
+      value2: { propertyType: "number", name: "Z", unit: "px", range: 500, hideLevel: "unimplemented"},
     }
   },
   inOutMoveFromOutsideFrameEffect: {
@@ -521,7 +530,7 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
       valueX: { propertyType: "number", name: "X軸", unit: "°", range: 360, },
       valueY: { propertyType: "number", name: "Y軸", unit: "°", range: 360, },
       valueZ: { propertyType: "number", name: "Z軸", unit: "°", range: 360, },
-      is3D: { propertyType: "boolean", name: "三次元配置" },
+      is3D: { propertyType: "boolean", name: "三次元配置", hideLevel:"unimplemented" },
     }
   },
   inOutZoomEffect: {
@@ -571,7 +580,7 @@ export const auidoEffectGroup = {
     name:"エコー",
     properties:{
       strength: {propertyType:"VarNumbers",name:"強度",unit:"%",min:0,max:100,},
-      delay: {propertyType:"VarNumbers",name:"遅延",unit:"秒",min:0,range:0.5,step:0.01,},
+      delay: {propertyType:"VarNumbers",name:"遅延",unit:"㍉秒",min:0,range:50,step:1,},
       feedBack:{propertyType:"VarNumbers",name:"フィードバック",unit:"%",min:0,max:100,},
     }
   },

@@ -2,9 +2,17 @@ import { useItemsStore, useStateStore, useVideoInfoStore } from "@/store/tlStore
 import { Renderer } from "@/renderer/renderer";
 import muxjs from "mux.js";
 
-const items = useItemsStore();
-const state = useStateStore();
-const videoInfo = useVideoInfoStore();
+let items: ReturnType<typeof useItemsStore>;
+let state: ReturnType<typeof useStateStore>;
+let videoInfo: ReturnType<typeof useVideoInfoStore>;
+
+const firstLoad = () =>{
+  if(!items){
+    items =useItemsStore();
+    state = useStateStore();
+    videoInfo = useVideoInfoStore();
+  }
+}
 
 // 推奨形式について: https://qa.nicovideo.jp/faq/show/5685?site_domain=default
 const H264_CODEC = "avc1.640028";// H264. high profile, なんか, lv
@@ -23,6 +31,7 @@ export const encode = async () => {
     alert("フレームが多すぎます。最終フレーム:" + items.lastFrame)
     return;
   }
+  firstLoad();
   await encodeVideo();
   await encodeAudio();
   downloadMP4();
