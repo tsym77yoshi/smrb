@@ -10,7 +10,7 @@ import { useFileStore } from "@/store/fileStore";
 import FullPageDialog from "@/components/DialogPage/FullPageDialog.vue";
 import ButtonsDialog from "@/components/DialogPage/ButtonsDialog.vue";
 import type { ButtonItemType } from "@/components/DialogPage/ButtonsDialog.vue";
-import {encode} from "./encode";
+import {encode} from "../../../renderer/encode";
 
 const fileStore = useFileStore();
 const resetStore = () => {

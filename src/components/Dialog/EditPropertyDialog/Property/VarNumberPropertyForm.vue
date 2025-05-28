@@ -13,15 +13,15 @@
 import { computed, ref } from "vue";
 import AnimationTypeDialog from "../Property/AnimationTypeDialog.vue";
 import NumberPropertyForm from "./NumberPropertyForm.vue";
-import type { Property, TLItem, VarNumbers, AnimationType, KeyFrames } from "@/types/itemType";
+import type { Property, VarNumbers, AnimationType, KeyFrames } from "@/types/itemType";
 import { getAnimationValuesType } from "@/types/itemType";
-import type { NumberForm, PropertyView } from "../propertyViewTypes"
+import type { NumberForm, PropertyView, ChangeIsEdigtingFuncType, ChangePropertyValFuncType, PropertyKey } from "../propertyViewTypes"
 
 const props = defineProps<{
   property: PropertyView,
-  propertyKey: keyof TLItem,
-  changeIsEditing: (editState: "start" | "end" | "set") => void,
-  changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => void,
+  propertyKey: PropertyKey,
+  changeIsEditing: ChangeIsEdigtingFuncType,
+  changeVal: ChangePropertyValFuncType,
   keyFrames: KeyFrames,
 }>();
 
@@ -43,9 +43,9 @@ const stepNumberForm: NumberForm = {
 
 type bindType = {
   property: PropertyView,
-  propertyKey: keyof TLItem,
+  propertyKey: PropertyKey,
   changeIsEditing: (editState: "start" | "end" | "set") => void,
-  changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => void,
+  changeVal: ChangePropertyValFuncType,
   option: 'VarNumbers',
 }
 
@@ -62,7 +62,7 @@ const binds = computed<bindType[]>(() => {
       property: getNewItemProperty(0),
       propertyKey: props.propertyKey,
       changeIsEditing: props.changeIsEditing,
-      changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
+      changeVal: (value: unknown, key: PropertyKey, isSet: boolean, option?: "VarNumbers") => {
         changeVarVal(value, key, isSet, 0)
       },
       option: 'VarNumbers',
@@ -80,7 +80,7 @@ const binds = computed<bindType[]>(() => {
       property: getNewItemProperty(0),
       propertyKey: props.propertyKey,
       changeIsEditing: props.changeIsEditing,
-      changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
+      changeVal: (value: unknown, key: PropertyKey, isSet: boolean, option?: "VarNumbers") => {
         changeVarVal(value, key, isSet, 0)
       },
       option: 'VarNumbers',
@@ -88,7 +88,7 @@ const binds = computed<bindType[]>(() => {
       property: getNewItemProperty(1),
       propertyKey: props.propertyKey,
       changeIsEditing: props.changeIsEditing,
-      changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
+      changeVal: (value: unknown, key: PropertyKey, isSet: boolean, option?: "VarNumbers") => {
         changeVarVal(value, key, isSet, 1)
       },
       option: 'VarNumbers',
@@ -96,7 +96,7 @@ const binds = computed<bindType[]>(() => {
       property: newItemPropertySpan,
       propertyKey: props.propertyKey,
       changeIsEditing: props.changeIsEditing,
-      changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
+      changeVal: (value: unknown, key: PropertyKey, isSet: boolean, option?: "VarNumbers") => {
         changeSpanVal(value, key, isSet)
       },
       option: 'VarNumbers',
@@ -107,7 +107,7 @@ const binds = computed<bindType[]>(() => {
       property: getNewItemProperty(index),
       propertyKey: props.propertyKey,
       changeIsEditing: props.changeIsEditing,
-      changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
+      changeVal: (value: unknown, key: PropertyKey, isSet: boolean, option?: "VarNumbers") => {
         changeVarVal(value, key, isSet, index)
       },
       option: 'VarNumbers',
@@ -123,13 +123,13 @@ const getNewItemProperty = (index: number) => {
   return newItemProperty;
 }
 
-const changeVarVal = (value: unknown, key: keyof TLItem, isSet: boolean, index: number) => {
+const changeVarVal = (value: unknown, key: PropertyKey, isSet: boolean, index: number) => {
   let newVal = JSON.parse(JSON.stringify(props.property.valueModel)) as VarNumbers;
   newVal.values[index].value = value as number;
   props.changeVal(newVal, key, isSet, "VarNumbers")
 }
 
-const changeSpanVal = (value: unknown, key: keyof TLItem, isSet: boolean) => {
+const changeSpanVal = (value: unknown, key: PropertyKey, isSet: boolean) => {
   let newVal = JSON.parse(JSON.stringify(props.property.valueModel)) as VarNumbers;
   newVal.span = value as number;
   props.changeVal(newVal, key, isSet, "VarNumbers")

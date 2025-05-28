@@ -30,15 +30,14 @@ import { defaultVideoEffects } from "@/data/defaultEffects";
 import PropertyGroups from "../../PropertyGroups.vue";
 import PropertyForm from "../PropertyForm.vue";
 import { propertyGroupToPropertyView } from "../../getPropertyView";
-import type { PropertyGroupView, PropertyView } from "../../propertyViewTypes";
-
+import type { PropertyGroupView, PropertyView, ChangePropertyValFuncType, ChangeIsEdigtingFuncType, PropertyKey } from "../../propertyViewTypes";
 
 type EffectsType = "VideoEffects" | "AudioEffects";
 const props = defineProps<{
   property: PropertyView,
-  propertyKey: keyof TLItem,
-  changeIsEditing: (editState: "start" | "end" | "set") => void,
-  overwriteVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => void,
+  propertyKey: PropertyKey,
+  changeIsEditing: ChangeIsEdigtingFuncType,
+  overwriteVal: ChangePropertyValFuncType,
   original: VideoEffect[] | AudioEffect[],
   keyFrames: KeyFrames,
 }>();
@@ -107,7 +106,7 @@ const removeEffect = () => {
     true,
   )
 }
-const overwriteEffect = (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
+const overwriteEffect = (value: unknown, key: PropertyKey, isSet: boolean, option?: "VarNumbers") => {
   if (selectedIndex.value < 0 || props.original.length <= selectedIndex.value) {
     return;
   }

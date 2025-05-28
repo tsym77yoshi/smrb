@@ -26,6 +26,9 @@ import { Matrix3 } from "./matrix";
 export class Renderer {
   // #をつけるとprivateになる
   #gl: WebGLRenderingContext;//CanvasRenderingContext2D;
+  getGL(){
+    return this.#gl;
+  }
   #renderIdStore = 0;// 同時に1つしかrenderしないよ
   #fileStore: ReturnType<typeof useFileStore>;
   #videoInfoStore: ReturnType<typeof useVideoInfoStore>;

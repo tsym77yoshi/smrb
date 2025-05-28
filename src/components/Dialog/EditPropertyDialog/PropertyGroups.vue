@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import type { PropertyGroupView } from "./propertyViewTypes";
-import { defineProps } from "vue";
+
 const props = defineProps<{
   propertyGroups: PropertyGroupView[];
 }>();

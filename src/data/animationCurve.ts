@@ -41,6 +41,16 @@ export const animation = (varNum: VarNumbers, frame: number, inputKeyFrames: Key
   // 内分比を使って値を取得
   return formerValue.value + (latterValue.value - formerValue.value) * division;
 }
+type LinearRamp = {
+  stSec: number;
+  edSec: number;
+  stVal: number;
+  edVal: number;
+}
+export const linearRamp = (varNum: VarNumbers, stFrame: number, inputKeyFrames: KeyFrames, itemLength: number, fps: number):LinearRamp[] =>{
+  // 後で書く
+  return []
+}
 
 // 出力値は0~1の範囲
 // tが0~1の範囲で入力される

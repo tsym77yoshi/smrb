@@ -34,14 +34,13 @@
 </template>
 
 <script setup lang="ts">
-import type { TLItem } from "@/types/itemType";
-import type { NumberForm, PropertyView } from "../propertyViewTypes";
+import type { NumberForm, PropertyView, ChangeIsEdigtingFuncType, ChangePropertyValFuncType, PropertyKey } from "../propertyViewTypes";
 
 const props = defineProps<{
   property: PropertyView,
-  propertyKey: keyof TLItem,
-  changeIsEditing: (editState: "start" | "end" | "set") => void,
-  changeVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => void,
+  propertyKey: PropertyKey,
+  changeIsEditing: ChangeIsEdigtingFuncType,
+  changeVal: ChangePropertyValFuncType,
   option?: "VarNumbers",
 }>();
 

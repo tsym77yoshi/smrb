@@ -17,8 +17,9 @@ import { isAudioItem, itemPropertyGroups, getAnimationValuesType } from "@/types
 import { useItemsStore, useSelectionStore, useStateStore, useLogStore, useVideoInfoStore } from "@/store/tlStore";
 import { animation } from "@/data/animationCurve";
 import { useRouter } from "vue-router";
-import { ReusableAudioPlayer } from "./playAudio";
+//import { ReusableAudioPlayer } from "./playAudio";
 import { useFileStore } from "@/store/fileStore";
+import { AudioPlayer } from "@/renderer/audio/audio";
 
 const items = useItemsStore();
 const selections = useSelectionStore();
@@ -27,6 +28,7 @@ const videoInfo = useVideoInfoStore();
 const filestore = useFileStore();
 const log = useLogStore();
 const router = useRouter();
+const audioPlayer = new AudioPlayer();
 
 // ｱｲﾃﾑ分割
 const contentCut = () => {
@@ -114,7 +116,7 @@ const getKeyFramesKeys = (item: Item): (keyof Item)[] => {
     .map(group => group.properties) // 各グループの properties を取得
     .flat() // 配列をフラット化
     .reduce((acc, props) => ({ ...acc, ...props }), {})) // 各 properties オブジェクトを結合
-    .filter(([key, value]) => (value as ItemProperty).propertyType === "VarNumbers") // propertyType が "VarNumbers" のみ抽出
+    .filter(([key, value]) => (value as Property).propertyType === "VarNumbers") // propertyType が "VarNumbers" のみ抽出
     .map(([key, value]) => key); // 必要に応じて整形
 
   // animationType が keyFrames のものを抽出
@@ -142,8 +144,9 @@ const play = () => {
   if (state.isPlaying) {
     /// 停止
     state.isPlaying = false;
-    playId++;
-    audioPlayStop();
+    //playId++;
+    //audioPlayStop();
+    audioPlayer.terminate();
   } else {
     /// 開始
     state.isPlaying = true;
@@ -152,9 +155,11 @@ const play = () => {
     start = undefined;
     step(performance.now());
 
+    audioPlayer.play();
+
     // 音声
-    playId++;
-    audiosPlayStart();// startの設定後である必要あり
+    //playId++;
+    // audiosPlayStart();// startの設定後である必要あり
   }
 }
 
@@ -183,12 +188,13 @@ const step = (timestamp: number) => {
     } else {
       state.isPlaying = false;
       state.setFrame(items.lastFrame);
-      playId++;
-      audioPlayStop();
+      //playId++;
+      //audioPlayStop();
+      audioPlayer.terminate();
     }
   }
 }
-// (音声の方)音声を再生する
+/* // (音声の方)音声を再生する
 type AudioCache = {
   player: ReusableAudioPlayer;
   itemId: number;
@@ -269,7 +275,7 @@ const audioPlaySet = (audioCache: AudioCache) => {
 
   // 現在の時刻が再生開始予定と終了予定の間
   audioCache.player.play(- waitTime / 1000)
-}
+} */
 
 const goToSetting = () => {
   router.push({ name: "setting" });

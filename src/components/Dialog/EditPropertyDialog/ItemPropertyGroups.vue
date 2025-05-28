@@ -40,17 +40,18 @@ import EffectProperty from "./Property/Effect/EffectProperty.vue";
 import PropertyGroups from "./PropertyGroups.vue";
 import PropertyForm from "./Property/PropertyForm.vue";
 import { propertyGroupToPropertyView } from "./getPropertyView";
-import type { PropertyGroupView, DiffValFuncType, OverwriteValFuncType } from "./propertyViewTypes";
+import type { PropertyGroupView, PropertyKey } from "./propertyViewTypes";
 
 const editDialog = ref()
 const show = () => {
   editDialog.value?.show()
 }
 
+type ItemPropertyChangeValFunc = (itemIds: number[], itemPropertyKey: PropertyKey, value: unknown, orignalVals: unknown[], isSet: boolean) => void;
 const props = defineProps<{
   targetItems: TLItem[],
-  diffVal: DiffValFuncType,
-  overwriteVal: OverwriteValFuncType,
+  itemDiffVal: ItemPropertyChangeValFunc,
+  itemOverwriteVal: ItemPropertyChangeValFunc,
 }>();
 
 
@@ -100,24 +101,24 @@ const changeIsEditing = (editState: "start" | "end" | "set") => {
   }
 };
 // 変化処理
-const diffVal = (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
+const diffVal = (value: unknown, key: PropertyKey, isSet: boolean, option?: "VarNumbers") => {
   if (option == "VarNumbers") {
     console.error("未実装")
   }
   if (!isEditing.value) {
     changeIsEditing("start");
   }
-  const originalVals = editItemOriginals.map((item) => item[key]) as number[]
-  props.diffVal(editItemOriginals.map((item) => item.id), key, (value as number) - originalVals[0], originalVals, isSet);
+  const originalVals = editItemOriginals.map((item) => item[key as keyof TLItem]) as number[]
+  props.itemDiffVal(editItemOriginals.map((item) => item.id), key, (value as number) - originalVals[0], originalVals, isSet);
   if (isSet) {
     changeIsEditing("end");
   }
 };
-const overwriteVal = (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => {
+const overwriteVal = (value: unknown, key: PropertyKey, isSet: boolean, option?: "VarNumbers") => {
   if (!isEditing.value) {
     changeIsEditing("start");
   }
-  props.overwriteVal(editItemOriginals.map((item) => item.id), key, value, editItemOriginals.map((item) => item[key]), isSet);
+  props.itemOverwriteVal(editItemOriginals.map((item) => item.id), key, value, editItemOriginals.map((item) => item[key as keyof TLItem]), isSet);
   if (isSet) {
     changeIsEditing("end");
   }

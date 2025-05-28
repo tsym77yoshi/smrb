@@ -64,23 +64,21 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from "vue";
 import {
   dropDowns,
   type ItemKey,
   type KeyFrames,
-  type TLItem,
 } from "@/types/itemType";
 import NumberPropertyForm from "./NumberPropertyForm.vue";
 import VarNumberPropertyForm from "./VarNumberPropertyForm.vue";
-import type { PropertyView } from "../propertyViewTypes";
+import type { PropertyView, ChangePropertyValFuncType, ChangeIsEdigtingFuncType, PropertyKey } from "../propertyViewTypes";
 
 const props = defineProps<{
   property: PropertyView,
-  propertyKey: ItemKey,
-  changeIsEditing: (editState: "start" | "end" | "set") => void,
-  diffVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => void,
-  overwriteVal: (value: unknown, key: keyof TLItem, isSet: boolean, option?: "VarNumbers") => void,
+  propertyKey: PropertyKey,
+  changeIsEditing: ChangeIsEdigtingFuncType,
+  diffVal: ChangePropertyValFuncType,
+  overwriteVal: ChangePropertyValFuncType,
   keyFrames: KeyFrames
 }>();
 

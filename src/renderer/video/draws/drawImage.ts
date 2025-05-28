@@ -1,39 +1,32 @@
-import type { TextItem } from "@/types/itemType";
-import type { ItemOption } from "../rendererTypes";
-import { CurveConverter } from "../curveConverter";
+import { useFileStore } from "@/store/fileStore";
 import { createTexture } from "../webglUtility";
-import type { useFileStore } from "@/store/fileStore";
 
-//WebGLTextureも返す
-export const drawVideo = (item: TextItem, cConv: CurveConverter, gl: WebGLRenderingContext): { tex: WebGLTexture, itemOption: ItemOption } | undefined => {
-};
-
-export type StoredVideoCanvasType = {
+export type StoredTextureType = {
   fileId: number;
-  canvas: OffscreenCanvas;
+  texture: WebGLTexture;
   width: number;
   height: number;
 };
-export class VideoStore {
-  #store: StoredVideoCodecsType[] = [];
+export class TextureStore {
+  #store: StoredTextureType[] = [];
   #gl: WebGLRenderingContext;
   constructor(gl: WebGLRenderingContext) {
     this.#gl = gl;
   }
-  get(fileId: number, fileStore: ReturnType<typeof useFileStore>): StoredVideoCanvasType | number | undefined {
+  get(fileId: number, fileStore: ReturnType<typeof useFileStore>): StoredTextureType | number | undefined {
     const stored = this.#store.find((_stored) => _stored.fileId == fileId);
     if (stored != undefined) {
       return stored;
     }
 
     // storedにない場合
-    const videoBlob = fileStore.getBlob(fileId);
+    const [image, status] = fileStore.get(fileId);
     if (status == "loaded") {
-      if (videoBlob == undefined) {
+      if (image == undefined || image?.file == undefined) {
         console.error("ファイルが想定外に存在しませんでした");
         return undefined;
       }
-      return this.set(fileId, videoBlob);
+      return this.set(fileId, image?.file as HTMLImageElement);
     } else if (status == "unload") {
       fileStore.startLoadFileById(fileId);
       return fileId;
@@ -44,10 +37,10 @@ export class VideoStore {
     } else if (status == "error") {
       return undefined;
     }
-    console.error("謎の場合分けに遭遇しました status:" + status);
+    console.error("謎の場合分けに遭遇しました status:"+status);
     return undefined;
   }
-  set(fileId: number, videoBlob: Blob): StoredVideoCanvasType | undefined {
+  set(fileId: number, texImageSource: HTMLImageElement): StoredTextureType | undefined {
     const texture = createTexture(texImageSource, this.#gl);
     if (texture == null) {
       console.error("テクスチャの生成に失敗しました");
@@ -61,7 +54,7 @@ export class VideoStore {
     }
     this.#store.unshift(store);
     // 多すぎる分を消す
-    if (this.#store.length > 100) {
+    if(this.#store.length > 100){
       this.#store.pop();
     }
 

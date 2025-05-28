@@ -220,7 +220,7 @@ const addItem = async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
-  else {
+  if (addItem == undefined) {
     console.error("このファイルの種類のアイテムがありません");
     return;
   }

@@ -1,6 +1,6 @@
 export type LoadedFile = {
   id: number;
-  file: HTMLImageElement;// 後で追加
+  file: HTMLImageElement | AudioBuffer;// 後で追加
 }
 export type FileInfo = {
   id: number;

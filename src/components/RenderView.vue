@@ -10,7 +10,7 @@ import {
   useStateStore,
   useVideoInfoStore,
 } from "@/store/tlStore";
-import { Renderer } from "@/renderer/renderer";
+import { Renderer } from "@/renderer/video/renderer";
 
 const renderView = ref<HTMLCanvasElement | null>(null);
 const videoInfo = useVideoInfoStore();

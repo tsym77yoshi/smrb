@@ -1,7 +1,7 @@
 <!-- アイテムをタップすると出てくる、アイテムのプロパティを編集するダイアログの中の内側の方 -->
 <template>
   <EditDialog ref="editDialog" :items="selectedItems">
-    <ItemPropertyDialog :targetItems="selectedItems" :diffVal="diffValTLItem" :overwriteVal="overwriteValTLItem" />
+    <ItemPropertyDialog :targetItems="selectedItems" :itemDiffVal="diffValTLItem" :itemOverwriteVal="overwriteValTLItem" />
   </EditDialog>
 </template>
 
@@ -15,6 +15,7 @@ import {
   useSelectionStore,
   useLogStore,
 } from "@/store/tlStore"
+import type { PropertyKey }from "@/components/Dialog/EditPropertyDialog/propertyViewTypes";
 
 const editDialog = ref();
 
@@ -24,10 +25,10 @@ const logs = useLogStore();
 
 const selectedItems = ref<TLItem[]>([]);
 
-const diffValTLItem = (ids: number[], key: keyof TLItem, diffValue: unknown, orignalVals: unknown[], isSet: boolean) => {
+const diffValTLItem = (ids: number[], key: PropertyKey, diffValue: unknown, orignalVals: unknown[], isSet: boolean) => {
   const log = items.diffwrite(
     ids,
-    key,
+    key as keyof TLItem,
     orignalVals as number[],
     diffValue as number,
     isSet,
@@ -36,10 +37,10 @@ const diffValTLItem = (ids: number[], key: keyof TLItem, diffValue: unknown, ori
     logs.add([log])
   }
 }
-const overwriteValTLItem = (ids: number[], key: keyof TLItem, overwriteValue: unknown, originalVals: unknown[], isSet: boolean) => {
+const overwriteValTLItem = (ids: number[], key: PropertyKey, overwriteValue: unknown, originalVals: unknown[], isSet: boolean) => {
   const log = items.overwrite(
     ids,
-    key,
+    key as keyof TLItem,
     originalVals,
     overwriteValue,
     isSet,

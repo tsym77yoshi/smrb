@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import Dexie, { type EntityTable } from 'dexie'
 import type { LoadedFile, FileInfo, FileSearchInfo, FileCreditDetail, FileStatus, FileType } from '@/types/fileType'
+import { isAudioItem } from '@/types/itemType';
 
 const db = new Dexie('FileDatabase') as Dexie & {
   files: EntityTable<
@@ -93,8 +94,11 @@ export const useFileStore = defineStore("file", () => {
     }
   }
   const startReadFile = (file: Blob, fileId: number, fileType: FileType) => {
-    if (fileType == "image") {
+    if (fileType === "image") {
+      // videoは未実装
       startReadImage(file, fileId);
+    } else if (isAudioItem(fileType)) {
+      startReadAudio(file, fileId);
     }
   }
   const startReadImage = async (file: Blob, fileId: number) => {
@@ -125,6 +129,24 @@ export const useFileStore = defineStore("file", () => {
       }
     };
     reader.readAsDataURL(file);
+  }
+  const startReadAudio = async (file: Blob, fileId: number) => {
+    try {
+      const audioContext = new AudioContext();
+      const audioBuffer = await audioContext.decodeAudioData(await file.arrayBuffer());
+      files.push({
+        id: fileId,
+        file: audioBuffer,
+      });
+      onReadFile(fileId);
+      console.log("fileId")
+    } catch (error) {
+      console.error("Error processing the audio:", error);
+      const info = getInfo(fileId)
+      if (info) {
+        info.status = "error"
+      }
+    }
   }
 
   const get = (fileId: number): [LoadedFile | undefined, FileStatus | undefined] => {
