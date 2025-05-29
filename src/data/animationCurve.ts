@@ -3,7 +3,7 @@ import type { AnimationType, VarNumbers, KeyFrames, EasingType, EasingMode } fro
 import { getAnimationValuesType, isEasingAnimationType } from "@/types/itemType";
 
 // frameはアイテム開始からのフレーム数、fpsは全体としてのフレームレート、itemLengthはアイテムの長さ(フレーム)
-export const animation = (varNum: VarNumbers, frame: number, inputKeyFrames: KeyFrames, itemLength: number, fps: number): number => {
+export const animation = (varNum: VarNumbers, frame/**アイテム開始から */: number, inputKeyFrames: KeyFrames, itemLength: number, fps: number): number => {
   // framesの中でframeより小さい最大のインデックスを取得
   const keyFrames = [0, ...inputKeyFrames.frames, itemLength];
   // keyFramesの中でframeより小さい最大のインデックスを取得
@@ -42,14 +42,42 @@ export const animation = (varNum: VarNumbers, frame: number, inputKeyFrames: Key
   return formerValue.value + (latterValue.value - formerValue.value) * division;
 }
 type LinearRamp = {
-  stSec: number;
-  edSec: number;
+  stFrame: number;
+  edFrame: number;
   stVal: number;
   edVal: number;
 }
-export const linearRamp = (varNum: VarNumbers, stFrame: number, inputKeyFrames: KeyFrames, itemLength: number, fps: number):LinearRamp[] =>{
-  // 後で書く
-  return []
+export const linearRamp = (varNum: VarNumbers, inputKeyFrames: KeyFrames, itemLength: number, fps: number):LinearRamp[] =>{
+  let returnVal: LinearRamp[] = [];
+  if (varNum.animationType === "なし") {
+    return [{stFrame: 0, edFrame: itemLength, stVal: varNum.values[0].value, edVal: varNum.values[0].value}];
+  }
+  else if (varNum.animationType === "直線移動") {
+    let keyFrames = [0, ...inputKeyFrames.frames, itemLength];
+    for(let i = 0; i < varNum.values.length - 1; i++) {
+      const stFrame = keyFrames[i];
+      const edFrame = keyFrames[i + 1];
+      const stVal = varNum.values[i].value;
+      const edVal = varNum.values[i + 1].value;
+      returnVal.push({stFrame: stFrame, edFrame: edFrame, stVal: stVal, edVal: edVal});
+    }
+    return returnVal;
+  }
+  else if (varNum.animationType === "反復移動") {
+    // TODO: 反復移動の実装
+  }
+  else if (varNum.animationType === "ランダム移動") {
+    // TODO: ランダム移動の実装
+  }
+
+  for (let i = 0; i < itemLength - 1; i++) {
+    const stFrame = i;
+    const edFrame = i + 1;
+    const stVal = animation(varNum, i, inputKeyFrames, itemLength, fps);
+    const edVal = animation(varNum, i + 1, inputKeyFrames, itemLength, fps);
+    returnVal.push({stFrame, edFrame, stVal, edVal});
+  }
+  return returnVal;
 }
 
 // 出力値は0~1の範囲

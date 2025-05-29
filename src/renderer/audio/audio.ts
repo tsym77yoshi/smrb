@@ -2,7 +2,7 @@ import type { AudioItem, VideoItem, AudioEffect, VoiceItem, TLItem, ItemType, Va
 import { isAudioItem } from "@/types/itemType";
 import { useItemsStore, useStateStore, useVideoInfoStore } from "@/store/tlStore";
 import { useFileStore } from "@/store/fileStore";
-import { animation } from "@/data/animationCurve";
+import { animation, linearRamp } from "@/data/animationCurve";
 
 type AudioItemsType = AudioItem | VideoItem | VoiceItem;
 
@@ -93,10 +93,15 @@ export class AudioPlayer {
     const source = audioContext.createBufferSource();
     source.buffer = audioBuffer;
     source.connect(destination);
+
+    const now = audioContext.currentTime;
+    const stSec = (item.frame - this.#playStartFrame) / this.#videoInfo.fps;
+    
+    
     // エフェクト
     const audioEffects = item.audioEffects;
-    // pan, volume, playbackRate, isLoop, fadeIn, fadeOut
 
+    // pan, volume, playbackRate, isLoop, fadeIn, fadeOut
     const fps = this.#videoInfo.fps;
     const duration = function () {
       switch (item.type) {
@@ -109,14 +114,18 @@ export class AudioPlayer {
     }();
 
     // ノード作成
-    source.loop = item.type === "voice" || item.isLooped;
+    source.loop = (item.type != "voice") && item.isLooped;
     source.playbackRate.value = item.playbackRate / 100;
 
     const gainNode = audioContext.createGain();
     gainNode.gain.value = 0; // 最初は 0 でフェードイン用
 
     const panner = audioContext.createStereoPanner();
-    panner.pan.value = 0////////////item.pan;
+    if (item.pan) {
+      this.#setEasingToAudioParam(panner.pan, item.pan, item.frame, item, (x: number) => {
+        return x / 100; // パンは -1.0 から 1.0 の範囲
+      });
+    }
     const [fadeIn, fadeOut] = function () {
       switch (item.type) {
         case "audio":
@@ -135,28 +144,25 @@ export class AudioPlayer {
     gainNode.connect(panner);
     panner.connect(destination);
 
-    const now = audioContext.currentTime;
-    let stSec = (item.frame - this.#playStartFrame) / this.#videoInfo.fps;
+    let stSecCut = stSec;
     let contentOffset = item.contentOffset || 0;
-    if(stSec < 0) {
-      contentOffset -= stSec; // オフセットを調整
-      stSec = 0; // 開始時間を0に調整
-      if(stSec < now) {
+    if(stSecCut < 0) {
+      contentOffset -= stSecCut; // オフセットを調整
+      stSecCut = 0; // 開始時間を0に調整
+      if(stSecCut < now) {
         contentOffset += now;
-        stSec = now;
+        stSecCut = now;
       }
     }
-    source.start(stSec, contentOffset, duration);
+    source.start(stSecCut, contentOffset, duration);
 
     // フェードイン
-    gainNode.gain.setValueAtTime(0, stSec);
-    gainNode.gain.linearRampToValueAtTime(1, stSec + fadeIn);/////////
+    this.#setLinearAudioParam(gainNode.gain, stSec, stSec + fadeIn, 0, 1);
 
     // フェードアウト設定（durationが指定されているとき）
     if (duration && fadeOut > 0) {
       const fadeOutStart = stSec + duration - fadeOut;
-      gainNode.gain.setValueAtTime(1, fadeOutStart);///////
-      gainNode.gain.linearRampToValueAtTime(0, fadeOutStart + fadeOut);
+      this.#setLinearAudioParam(gainNode.gain, fadeOutStart, fadeOutStart + fadeOut, 1, 0);
     }
   }
 
@@ -194,28 +200,24 @@ export class AudioPlayer {
     }
   }
 
-  #easingToLinear = (varNum: VarNumbers, item: TLItem, stFrame: number) => {
-
-
-    return animation(varNum, stFrame, item.keyFrames, item.length, this.#videoInfo.fps);
+  #setEasingToAudioParam = (param: AudioParam, varNum: VarNumbers, stTime_s: number, item: AudioItemsType, valTreat: (x:number) => number) => {
+    linearRamp(varNum, item.keyFrames, item.length, this.#videoInfo.fps).forEach((ramp) => {
+      const startTime = ramp.stFrame / this.#videoInfo.fps + stTime_s;
+      const endTime = ramp.edFrame / this.#videoInfo.fps + stTime_s;
+      const stVal = valTreat(ramp.stVal);
+      const edVal = valTreat(ramp.edVal);
+      this.#setLinearAudioParam(param, startTime, endTime, stVal, edVal);
+    })
   }
-}
 
-
-function audioBufferToWav(buffer: AudioBuffer):Blob {
-  const numOfChan = buffer.numberOfChannels;
-  const length = buffer.length * numOfChan * 2 + 44;
-  const bufferArray = new ArrayBuffer(length);
-  const view = new DataView(bufferArray);
-  // ... WAV header 書き込み（省略）
-  return new Blob([view], { type: 'audio/wav' });
-}
-const downloadBuffer = (buffer: AudioBuffer): void => { 
-  const wavBlob = audioBufferToWav(buffer);
-  const url = URL.createObjectURL(wavBlob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'offline.wav';
-  link.textContent = 'Download offline render';
-  document.body.appendChild(link);
+  #setLinearAudioParam = (param: AudioParam, startTime: number, endTime: number, stVal: number, edVal: number) => {
+    if (endTime < 0) return; // 開始時間より前の値は無視
+      if (startTime < 0) {
+        // 開始時間が0より前の場合、内分をとる
+        startTime = 0;
+        stVal = (stVal * (endTime - 0) + edVal * (0 - startTime)) / (endTime - startTime);
+      }
+      param.setValueAtTime(stVal, startTime);
+      param.linearRampToValueAtTime(edVal, endTime);
+  }
 }

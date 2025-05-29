@@ -1,6 +1,5 @@
 <template>
   <q-card class="q-pa-md">
-    <q-linear-progress :value="progress" color="primary" animated />
     <div class="text-caption text-grey q-mt-sm">ログ出力エリア</div>
 
     <q-separator class="q-my-sm" />
@@ -21,7 +20,6 @@ type LogEntry = {
 }
 
 const logs = ref<LogEntry[]>([])
-const progress = ref(0)
 
 const addLog = (message: string) => {
   logs.value.push({
@@ -30,11 +28,10 @@ const addLog = (message: string) => {
 }
 const reset = () => {
   logs.value = []
-  progress.value = 0
 }
+
 defineExpose({
   reset,
   addLog,
 });
-
 </script>
