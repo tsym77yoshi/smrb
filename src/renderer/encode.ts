@@ -2,10 +2,10 @@ import { useItemsStore, useStateStore, useVideoInfoStore } from "@/store/tlStore
 import { Renderer } from "@/renderer/video/renderer";
 import { AudioPlayer } from "@/renderer/audio/audio";
 import muxjs from "mux.js";
-import { render } from "vue";
+import { encodeByFFmpeg } from "./encodeByFFmpeg";
 
 // audioEncoderが存在していればそれを使い、していなければMediaRecorderを使う
-
+/* 
 let items: ReturnType<typeof useItemsStore>;
 let state: ReturnType<typeof useStateStore>;
 let videoInfo: ReturnType<typeof useVideoInfoStore>;
@@ -16,18 +16,20 @@ const firstLoad = () => {
     state = useStateStore();
     videoInfo = useVideoInfoStore();
   }
-}
+} */
 
 // 推奨形式について: https://qa.nicovideo.jp/faq/show/5685?site_domain=default
-const H264_CODEC = "avc1.640028";// H264. high profile, なんか, lv
+/* const H264_CODEC = "avc1.640028";// H264. high profile, なんか, lv
 const autoBitrate = [
   { height: 1080, bitrate: 12_000_000 },
   { height: 720, bitrate: 6_000_000 },
   { height: 480, bitrate: 2_000_000 },
-]
+] */
 
-export const encode = async () => {
-  firstLoad();
+export const encode = async (displayMessage: (message: string) => void) => {
+  encodeByFFmpeg(displayMessage);
+  return;
+  /* firstLoad();
   if (items.lastFrame == 0) {
     return;
   }
@@ -36,11 +38,14 @@ export const encode = async () => {
     alert("フレームが多すぎます。最終フレーム:" + items.lastFrame)
     return;
   }
+
   firstLoad();
   await encodeVideo();
   await encodeAudio();
-  downloadMP4();
-}
+
+  console.log("動画と音声のエンコードが完了しました。ダウンロードを開始します。");
+  downloadMP4(); */
+}/* 
 const encodeVideo = async () => {
   console.log(videoInfo.height)
   const offscreen = new OffscreenCanvas(videoInfo.width, videoInfo.height);
@@ -76,7 +81,7 @@ const encodeVideo = async () => {
     encoder.encode(frame);
     //frame.close();
     setTimeout(() => frame.close(), 0);
-  }; */
+  };
   const frameQueue: VideoFrame[] = [];
 
   for (let i = 0; i < items.lastFrame; i++) {
@@ -107,7 +112,7 @@ const encodeVideo = async () => {
     console.log('VideoEncoderはflush、closeが完了しました');
   });
 }
-// audioEncoderはsafariでも使えないので
+
 const encodeAudio = async () => {
   if ("AudioEncoder" in window) {
     console.log("AudioEncoder available. Using WebCodecs.");
@@ -134,7 +139,7 @@ const encodeAudioWithAudioEncoder = async (audioBuffer: AudioBuffer) => {
 
   const encoder = new AudioEncoder(init);
   encoder.configure({
-    codec: "opus", // MP4互換なら 'aac' だが非対応のことがある
+    codec: "aac", // MP4互換なら 'aac' だが非対応のことがある
     numberOfChannels,
     sampleRate,
     bitrate: 128_000,
@@ -160,8 +165,10 @@ const encodeAudioWithAudioEncoder = async (audioBuffer: AudioBuffer) => {
   });
 
   encoder.encode(audioData);
-  await encoder.flush();
-  encoder.close();
+  await encoder.flush().then(() => {
+    console.log('AudioEncoder flush completed');
+    encoder.close();
+  });
 };
 const encodeAudioWithMediaRecorder = async (): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -223,13 +230,11 @@ const downloadMP4 = () => {
   }
 
   const muxer = new muxjs.mp4.Transmuxer();
-
-  videoChunks.forEach((chunk) => muxer.push(chunk));
-  audioChunks.forEach((chunk) => muxer.push(chunk));
-
-  muxer.flush();
-
+  muxer.on('error', (error) => {
+    console.error("Muxing error:", error);
+  });
   muxer.on('data', (segment) => {
+    console.log("MP4 segment created, size:", segment.data.byteLength);
     const blob = new Blob([segment.data], { type: 'video/mp4' });
     const url = URL.createObjectURL(blob);
 
@@ -240,4 +245,11 @@ const downloadMP4 = () => {
 
     URL.revokeObjectURL(url);
   });
-}
+  
+  videoChunks.forEach((chunk) => muxer.push(chunk));
+  audioChunks.forEach((chunk) => muxer.push(chunk));
+
+
+  muxer.flush();
+  console.log("flushed")
+} */

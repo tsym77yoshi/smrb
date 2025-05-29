@@ -11,7 +11,7 @@
       </q-toolbar>
     </q-header>
 
-    <q-page-container>
+    <q-page-container style="height:100%">
       <slot></slot>
     </q-page-container>
 
