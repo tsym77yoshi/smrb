@@ -9,6 +9,9 @@ const ffmpeg = new FFmpeg;
 let items: ReturnType<typeof useItemsStore>;
 let state: ReturnType<typeof useStateStore>;
 let videoInfo: ReturnType<typeof useVideoInfoStore>;
+let displayMessage: (message: string) => void = (message: string) => {
+  console.log(message)
+};
 
 const firstLoad = () => {
   if (!items) {
@@ -17,7 +20,7 @@ const firstLoad = () => {
     videoInfo = useVideoInfoStore();
   }
 }
-const load = async (displayMessage: (message: string) => void) => {
+const load = async () => {
   const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
 
   ffmpeg.on('log', ({ message }) => {
@@ -30,13 +33,14 @@ const load = async (displayMessage: (message: string) => void) => {
   });
 }
 
-export const encodeByFFmpeg = async (displayMessage: (message: string) => void) => {
+export const encodeByFFmpeg = async (displayMessageDash: (message: string) => void) => {
+  displayMessage = displayMessageDash;
   firstLoad();
   if (items.lastFrame === 0) return;
 
   if (!ffmpeg.loaded) {
     displayMessage("FFmpegを読み込み中...");
-    await load(displayMessage);
+    await load();
   }
 
   if (items.lastFrame > 100000) {
@@ -113,6 +117,7 @@ const writeVideo = async () => {
     tasks.push(task);
 
     if (tasks.length >= MAX_CONCURRENT) {
+      displayMessage(`フレーム ${i + 1} / ${items.lastFrame} を書き込み中...`);
       await Promise.all(tasks);
       tasks.length = 0;
     }
