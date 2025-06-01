@@ -32,7 +32,6 @@ export const propertyGroupToPropertyView = (
     return propertyGroup;
   });
   // valueModelを追加していく
-  const lastSelectedItem = lastSelectedItemOriginal;
   return propertyGroups.map((propertyGroup) => {
     let resultPropertiesView: Record<string, PropertyView> = {};
     Object.keys(propertyGroup.properties).map((strKey) => {
@@ -41,7 +40,7 @@ export const propertyGroupToPropertyView = (
       const targetPropertyType = targetProperty.propertyType;
       // valueModelのやつ
       let valueModel = undefined;
-      valueModel = lastSelectedItem[key as ItemKey];
+      valueModel = lastSelectedItemOriginal[key as ItemKey];
       // 数字限定。min, max, stepのやつ
       let numberForm = {};
       if (

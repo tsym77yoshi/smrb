@@ -78,12 +78,10 @@ const editData = computed<PropertyGroupView[]>(() => {
         (itemGroup) => !removeGroupNames.includes(itemGroup.name)
       );
     }
-    return propertyGroupToPropertyView(resultItemGroups, props.targetItems[0]);
+    return propertyGroupToPropertyView(resultItemGroups, editItemOriginals[0]);
   }
   return [];
 });
-
-
 
 // 変更前のデータ
 let editItemOriginals: TLItem[] = [];
@@ -97,7 +95,7 @@ const changeIsEditing = (editState: "start" | "end" | "set") => {
   } else if (editState == "end") {
     isEditing.value = false;
   } else {
-    console.error("unexpectedを受け取ったよ！");
+    console.error("editStateのunexpectedを受け取ったよ！");
   }
 };
 // 変化処理
