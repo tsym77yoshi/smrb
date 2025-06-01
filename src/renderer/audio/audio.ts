@@ -15,13 +15,14 @@ export class AudioPlayer {
   
   #renderId: number;
   #playStartFrame: number;
+  #loadWaitingFileIds: number[] = [];
 
   constructor() {
     this.#fileStore = useFileStore();
     this.#videoInfo = useVideoInfoStore();
     this.#state = useStateStore();
     this.#items = useItemsStore();
-    this.#renderId = -1;
+    this.#renderId = 0;
     this.#playStartFrame = 0;
   }
 
@@ -33,6 +34,7 @@ export class AudioPlayer {
   terminate = (): void =>{
     console.log("audio terminated");
     this.#renderId++;
+    this.#loadWaitingFileIds = [];
     if(this.#audioContext == null) {
       console.warn("AudioContext is not initialized.");
       return;
@@ -46,10 +48,12 @@ export class AudioPlayer {
     const length = sampleRate * this.#items.lastFrame / this.#videoInfo.fps;
     const offlineAudioContext = new OfflineAudioContext(2, length, sampleRate);
     this.#mix(0, offlineAudioContext);
+    while (this.#loadWaitingFileIds.length > 0) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     return await offlineAudioContext.startRendering();
   }
   #mix = (stFrame: number, audioContext: AudioContext | OfflineAudioContext) => {
-    //this.#renderId = this.#renderId;
     const audioItems = this.#filterAudioItems(this.#items.items);
     const activeItems = this.#filterItemsByIsActive(audioItems);
     const filteredItems = this.#filterItemsByFrame(activeItems, stFrame);
@@ -66,6 +70,9 @@ export class AudioPlayer {
         this.#fileStore.startLoadFileById(fileId);
       }
       if (status === "unload" || status === "loading") {
+        this.#loadWaitingFileIds.push(fileId);
+        
+        // 読み込みが終わったら実行する関数を登録
         this.#fileStore.addOnReadFileFunc(fileId, () => {
           const [loadedFile, status] = this.#fileStore.get(fileId);
           if (loadedFile == undefined) {
@@ -75,8 +82,9 @@ export class AudioPlayer {
           if (this.#renderId !== this.#renderId) {
             return;
           }
-          console.log("loaded")
-          this.#mixOne(item, audioContext, loadedFile.file as AudioBuffer);  
+          console.log("loaded");
+          this.#loadWaitingFileIds = this.#loadWaitingFileIds.filter(id => id !== fileId);
+          this.#mixOne(item, audioContext, loadedFile.file as AudioBuffer);
         });
       } else if (status === "loaded") {
         if (file == undefined) {

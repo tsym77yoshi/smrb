@@ -40,10 +40,30 @@ export class Renderer {
     return this.#gl;
   }
 
-  render(frame: number, itemLayers: Item[][], renderId?: number) {
-    if (renderId !== undefined && renderId !== this.#renderIdStore) return;
-    else this.#renderIdStore++;
+  dispose() {
+    this.#gl.getExtension('WEBGL_lose_context')?.loseContext();
+  }
 
+  // ロードが終わるまで待ってから描画する
+  renderWaitLoad = (frame: number, itemLayers: Item[][]) => {
+    this.#renderIdStore++;
+    this.#render(frame, itemLayers, true)
+  }
+
+  // ロードが終わるのを待たずに描画する
+  renderNotWaitLoad = (frame: number, itemLayers: Item[][]) => {
+    this.#renderIdStore++;
+    this.#render(frame, itemLayers, false);
+  }
+
+  // ロードが終わるのを待たずに描画するときに再描画する
+  rerender = (frame: number, itemLayers: Item[][], renderId?: number) => {
+    if (renderId !== undefined && renderId !== this.#renderIdStore) return;
+    this.#render(frame, itemLayers, false);
+  }
+
+  // 描画する(待たずに描画するかは関数の引数)
+  #render = async (frame: number, itemLayers: Item[][], isWaitLoad: boolean) => {
     this.#gl.clearColor(0, 0, 0, 1);
     this.#gl.clear(this.#gl.COLOR_BUFFER_BIT);
 
@@ -62,7 +82,11 @@ export class Renderer {
           this.#draw(item as DrawingItem, texAndItemOption.tex, texAndItemOption.itemOption, cConv);
         }
       } else if (itemType === "image") {
-        const status = this.#textureStore.get((item as ImageItem).fileId, this.#fileStore);
+        let status = this.#textureStore.get((item as ImageItem).fileId, this.#fileStore);
+        if (isWaitLoad && typeof status === "number") {
+          await new Promise(resolve => setTimeout(resolve, 200/**sleep_duration_ms */));
+          status = this.#textureStore.get((item as ImageItem).fileId, this.#fileStore);
+        }
         if (typeof status === "number") {
           reRenderFileId = status;
         } else if (status) {
@@ -83,9 +107,11 @@ export class Renderer {
           this.#draw(item as DrawingItem, texAndItemOption.tex, texAndItemOption.itemOption, cConv);
         }
       }
-      if (reRenderFileId !== undefined) {
+      if (reRenderFileId !== undefined && !isWaitLoad) {
+
+        // 読み込みが終わったら実行する関数を登録
         this.#fileStore.addOnReadFileFunc(reRenderFileId, () => {
-          this.render(frame, itemLayers, this.#renderIdStore);
+          this.rerender(frame, itemLayers, this.#renderIdStore);
         });
       }
     }
@@ -138,9 +164,9 @@ export class Renderer {
     const m = isInverted ? -1 : 1;
     const vertices = new Float32Array([
       -0.5 * m, -0.5, 0, 1,
-       0.5 * m, -0.5, 1, 1,
-      -0.5 * m,  0.5, 0, 0,
-       0.5 * m,  0.5, 1, 0,
+      0.5 * m, -0.5, 1, 1,
+      -0.5 * m, 0.5, 0, 0,
+      0.5 * m, 0.5, 1, 0,
     ]);
     const buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);

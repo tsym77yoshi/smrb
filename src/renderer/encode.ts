@@ -76,7 +76,7 @@ const encodeVideo = async () => {
   encoder.configure(config);
 
   /* for (let i = 0; i < items.lastFrame; i++) {
-    renderer.render(i, items.layers);
+    renderer.renderNotWaitLoad(i, items.layers);
     const frame = new VideoFrame(offscreen, { timestamp: i * (1_000_000 / videoInfo.fps) }); // マイクロ秒なので1_000_000倍
     encoder.encode(frame);
     //frame.close();
@@ -85,7 +85,7 @@ const encodeVideo = async () => {
   const frameQueue: VideoFrame[] = [];
 
   for (let i = 0; i < items.lastFrame; i++) {
-    renderer.render(i, items.layers);
+    renderer.renderNotWaitLoad(i, items.layers);
 
     const frame = new VideoFrame(offscreen, {
       timestamp: i * (1_000_000 / videoInfo.fps),

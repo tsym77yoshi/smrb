@@ -25,7 +25,7 @@ onMounted(() => {
     if (renderView.value) {
       let ctx = renderView.value;
       renderer = new Renderer(ctx.getContext("webgl"));
-      renderer.render(state.frame, items.layers);
+      renderer.renderNotWaitLoad(state.frame, items.layers);
     } else {
       console.error("Canvasを取得できませんでした。");
     }
@@ -35,12 +35,12 @@ onMounted(() => {
 });
 // 片方は片方でしか動かなかったので両方書いた
 watch((items.items), () => {
-  renderer.render(state.frame, items.layers);
+  renderer.renderNotWaitLoad(state.frame, items.layers);
 }, { deep: true });
 watchEffect(() => {
   state.frame; // reactive化用のおまじない
   if (renderer == undefined) return;
-  renderer.render(state.frame, items.layers);
+  renderer.renderNotWaitLoad(state.frame, items.layers);
 });
 
 defineExpose({ renderView })

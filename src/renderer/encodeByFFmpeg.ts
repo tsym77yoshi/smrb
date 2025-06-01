@@ -91,26 +91,23 @@ const writeVideo = async () => {
 
   const tasks: Promise<void>[] = [];
   const canvases: OffscreenCanvas[] = [];
-  const webgls: WebGLRenderingContext[] = [];
+  const renderers: Renderer[] = [];
   for (let i = 0; i < MAX_CONCURRENT; i++) {
     const canvas = new OffscreenCanvas(width, height);
     const gl = canvas.getContext('webgl');
     if (!gl) throw new Error("WebGL not supported");
     canvases.push(canvas);
-    webgls.push(gl);
+    renderers.push(new Renderer(gl));
   }
 
   for (let i = 0; i < items.lastFrame; i++) {
     const task = (async (frameIndex: number) => {
-      const renban = frameIndex.toString().padStart(5, '0');
-      const renderer = new Renderer(webgls[frameIndex % MAX_CONCURRENT]);
-      
-      // ここで描画を反映させる必要あり
-      renderer.render(frameIndex, items.layers);
+      await renderers[frameIndex % MAX_CONCURRENT].renderWaitLoad(frameIndex, items.layers);
 
       // PNG へエクスポート
       const blob = await canvases[frameIndex % MAX_CONCURRENT].convertToBlob({ type: 'image/png' });
       const arrayBuffer = await blob.arrayBuffer();
+      const renban = frameIndex.toString().padStart(5, '0');
       await ffmpeg.writeFile(`image_${renban}.png`, new Uint8Array(arrayBuffer));
     })(i);
 
@@ -126,6 +123,11 @@ const writeVideo = async () => {
   if (tasks.length > 0) {
     await Promise.all(tasks);
   }
+  // メモリを解放
+  for (let i= 0; i < MAX_CONCURRENT; i++) {
+    renderers[i].dispose();
+  }
+  canvases.length = 0;
 };
 const writeAudio = async () => {
   const audioPlayer = new AudioPlayer();
@@ -134,7 +136,7 @@ const writeAudio = async () => {
   const wavData = encodeWav(audioBuffer);
   await ffmpeg.writeFile('audio.wav', wavData);
 }
-function encodeWav(audioBuffer: AudioBuffer): Uint8Array {
+const encodeWav = (audioBuffer: AudioBuffer): Uint8Array => {
   const numChannels = audioBuffer.numberOfChannels;
   const sampleRate = audioBuffer.sampleRate;
   const format = 1; // PCM
