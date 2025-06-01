@@ -1,5 +1,5 @@
 # スマホ編集SMRB(SpeechsynthMovie楽々Builder、合成音声動画楽々制作)
-スマホブラウザで合成音声キャラクター動画制作をする為に作られた動画制作ツール
+スマホブラウザで合成音声キャラクター動画制作をする為に作られた動画制作ツール（完成してません）
 
 ## 非対応ブラウザ
 Firefox for android(webcodecs/videoEncoder)
