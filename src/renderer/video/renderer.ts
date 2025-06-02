@@ -14,6 +14,8 @@ import { drawText } from "./draws/drawText";
 import { TextureStore } from "./draws/drawImage";
 import { drawShape } from "./draws/drawShape";
 
+import { applyEffect } from "./effect";
+
 import { EffectLoader } from "./effectLoader";
 import { CurveConverter } from "./curveConverter";
 import { Matrix3 } from "./matrix";
@@ -23,7 +25,8 @@ export class Renderer {
   #renderIdStore = 0;
   #fileStore: ReturnType<typeof useFileStore>;
   #videoInfoStore: ReturnType<typeof useVideoInfoStore>;
-  #effectLoader: EffectLoader;
+  #drawEffectLoader: EffectLoader;
+  #drawShaderProgram: WebGLProgram | undefined;
   #textureStore: TextureStore;
 
   constructor(inputgl: WebGLRenderingContext | null) {
@@ -33,7 +36,41 @@ export class Renderer {
     this.#fileStore = useFileStore();
     this.#videoInfoStore = useVideoInfoStore();
     this.#textureStore = new TextureStore(this.#gl);
-    this.#effectLoader = new EffectLoader(this.#gl);
+    this.#drawEffectLoader = new EffectLoader(this.#gl);
+    const drawVertexShader = this.#drawEffectLoader.compileShader(`
+      attribute vec4 position;
+      attribute vec2 texCoord;
+      varying vec2 vTexCoord;
+      uniform mat3 angleScaleTransMat;// 回転拡大移動行列
+  
+      void main() {
+        vec3 pos = angleScaleTransMat * vec3(position.xy, 1.0);
+        gl_Position = vec4(pos.x, pos.y, position.zw);
+        vTexCoord = texCoord;
+      }`, this.#gl.VERTEX_SHADER);
+    const drawFragmentShader = this.#drawEffectLoader.compileShader(`
+      precision mediump float;
+      varying vec2 vTexCoord;
+      uniform sampler2D texture;
+      uniform float opacity;
+
+      void main() {
+        vec4 color = texture2D(texture, vTexCoord);
+        gl_FragColor = vec4(color.rgb, color.a * opacity);
+      }`, this.#gl.FRAGMENT_SHADER);
+    if (drawVertexShader && drawFragmentShader) {
+      const shaderProgram = this.#drawEffectLoader.useProgram(drawVertexShader, drawFragmentShader);
+      if (shaderProgram) {
+        this.#drawShaderProgram = shaderProgram;
+      }
+      else {
+        console.error("Draw shader program creation failed");
+        return;
+      }
+    }
+    else {
+      console.error("Draw shader program creation failed");
+    }
   }
 
   getGL() {
@@ -126,10 +163,19 @@ export class Renderer {
   }
 
   #draw(item: DrawingItem, texture: WebGLTexture, itemOption: ItemOption, cConv: CurveConverter) {
-    const gl = this.#gl;
+    const gl = this.#gl;// 書きやすくするため
 
-    const shaderProgram = this.#effectLoader.useEffect("texture");
-    if (!shaderProgram) return;
+    // エフェクトを適用する
+    texture = applyEffect(gl, item, texture, itemOption, cConv);
+
+    // drawingItemの描画
+    if (!this.#drawShaderProgram) {
+      console.error("Draw shader program is not initialized");
+      return;
+    }
+    gl.linkProgram(this.#drawShaderProgram);
+    gl.useProgram(this.#drawShaderProgram);
+    gl.viewport(0, 0, this.#videoInfoStore.width, this.#videoInfoStore.height);
 
     const zoom = cConv.getVarNum(item.zoom) / 100;
     itemOption.pivotX *= zoom;
@@ -146,16 +192,16 @@ export class Renderer {
       .transpose()
       .matrix;
 
-    gl.uniformMatrix3fv(gl.getUniformLocation(shaderProgram, "angleScaleTransMat"), false, mat);
+    gl.uniformMatrix3fv(gl.getUniformLocation(this.#drawShaderProgram, "angleScaleTransMat"), false, mat);
 
     const opacity = (cConv.getVarNum(item.opacity) / 100) *
       (item.fadeIn > 0 ? Math.min(itemOption.itemFrame / (item.fadeIn * this.#videoInfoStore.fps), 1) : 1) *
       (item.fadeOut > 0 ? Math.min((item.length - itemOption.itemFrame) / (item.fadeOut * this.#videoInfoStore.fps), 1) : 1);
-    gl.uniform1f(gl.getUniformLocation(shaderProgram, "opacity"), opacity);
+    gl.uniform1f(gl.getUniformLocation(this.#drawShaderProgram, "opacity"), opacity);
 
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    this.#createVertexData(shaderProgram, item.isInverted);
+    this.#createVertexData(this.#drawShaderProgram, item.isInverted);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 

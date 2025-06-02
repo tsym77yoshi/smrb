@@ -1,40 +1,47 @@
+import { byougaFragmentShaderSources } from "./shaders/byougaShaders";
+
+const nullVertexShaderSource = `
+      attribute vec4 position;
+      attribute vec2 texCoord;
+      varying vec2 vTexCoord;
+  
+      void main() {
+        gl_Position = position;
+        vTexCoord = texCoord;
+      }`;
+
 export class EffectLoader {
   #gl: WebGLRenderingContext;
   #shaders = new Map<string, WebGLShader>();
-  #vertexShader: WebGLShader | null;
+  #nullVertexShaderCache: WebGLShader | null;// 何もしないvertexシェーダーのcache
 
   constructor(gl: WebGLRenderingContext) {
     this.#gl = gl;
-    this.#vertexShader = null;
+    this.#nullVertexShaderCache = null;
   }
 
   useEffect(effectName: string): WebGLProgram | undefined {
-    if (this.#vertexShader == null) {
-      this.#vertexShader = this.compileShader(`
-        attribute vec4 position;
-        attribute vec2 texCoord;
-        varying vec2 vTexCoord;
-        uniform mat3 angleScaleTransMat;// 回転拡大移動行列
-  
-        void main() {
-          vec3 pos = angleScaleTransMat * vec3(position.xy, 1.0);
-          gl_Position = vec4(pos.x, pos.y, position.zw);
-          vTexCoord = texCoord;
-        }`, this.#gl.VERTEX_SHADER);
+    let vertexShaderSource = this.#getVertexShaderSource(effectName);
+    if (vertexShaderSource == "" && this.#nullVertexShaderCache == null) {
+      this.#nullVertexShaderCache = this.compileShader(nullVertexShaderSource, this.#gl.VERTEX_SHADER);
     }
-    const fragmentShader = this.#getShader(effectName);
-    if (this.#vertexShader == null || fragmentShader == null) {
+    const vertexShader = (vertexShaderSource == "") ?
+      this.#nullVertexShaderCache : this.compileShader(vertexShaderSource, this.#gl.VERTEX_SHADER);
+
+    const fragmentShader = this.#getFragmetShader(effectName);
+
+    if (vertexShader == null || fragmentShader == null) {
       console.error("Shader load error");
       return;
     }
-    return this.useProgram(this.#vertexShader, fragmentShader);
+    return this.useProgram(vertexShader, fragmentShader);
   }
 
-  #getShader(shaderName: string): WebGLShader | null {
+  #getFragmetShader(shaderName: string): WebGLShader | null {
     if (this.#shaders.has(shaderName)) {
       return this.#shaders.get(shaderName)!;
     }
-    const shader = this.compileShader(this.#getShaderSource(shaderName), this.#gl.FRAGMENT_SHADER);
+    const shader = this.compileShader(this.#getFragmentShaderSource(shaderName), this.#gl.FRAGMENT_SHADER);
     if (shader == null) {
       return null;
     }
@@ -43,21 +50,19 @@ export class EffectLoader {
   }
 
   // このメソッドは実装されていません
-  #getShaderSource(shaderName: string): string {
-    // フラグメントシェーダー
-    if (shaderName === "texture") {
-      return `
-            precision mediump float;
-            varying vec2 vTexCoord;
-            uniform sampler2D texture;
-            uniform float opacity;
+  #getVertexShaderSource(shaderName: string): string {
+    return ""
+  }
 
-            void main() {
-              vec4 color = texture2D(texture, vTexCoord);
-              gl_FragColor = vec4(color.rgb, color.a * opacity);
-            }
-        `;
+  #getFragmentShaderSource(shaderName: string): string {
+    const fragmentShaderSourceses = [byougaFragmentShaderSources];
+
+    for (const fragmentShaderSources of fragmentShaderSourceses) {
+      if (shaderName in fragmentShaderSources) {
+        return fragmentShaderSources[shaderName];
+      }
     }
+
     return "";
   }
 

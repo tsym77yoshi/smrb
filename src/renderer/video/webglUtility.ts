@@ -40,7 +40,7 @@ export const createFrameBuffer = (width: number, height: number, gl: WebGLRender
   // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 }
 
-const setTextureSetting = (gl: WebGLRenderingContext): void => {
+export const setTextureSetting = (gl: WebGLRenderingContext): void => {
   // テクスチャの拡大・縮小フィルタを設定
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);

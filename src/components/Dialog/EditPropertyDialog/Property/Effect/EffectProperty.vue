@@ -14,7 +14,7 @@
         property: property,
         propertyKey: propertyKey,
         diffVal: () => { },
-        overwriteVal: overwriteVal,
+        overwriteVal: overwriteEffect,
         changeIsEditing: changeIsEditing,
         keyFrames: keyFrames
       }" style="display: flex;flex-direction: row;" />
@@ -84,7 +84,7 @@ const getEffectLabel = (effect: VideoEffect | AudioEffect, effectType: EffectsTy
 
 const addEffect = () => {
   props.overwriteVal(
-    props.original.concat([defaultVideoEffects["centerPointEffect"]]),
+    props.original.concat([defaultVideoEffects.colorCorrectionEffect/* [""] */]),
     props.propertyKey,
     true,
   )
@@ -110,8 +110,8 @@ const overwriteEffect = (value: unknown, key: PropertyKey, isSet: boolean, optio
   if (selectedIndex.value < 0 || props.original.length <= selectedIndex.value) {
     return;
   }
-  const originalCopy = JSON.parse(JSON.stringify(props.original))
-  originalCopy[selectedIndex.value] = value as VideoEffect | AudioEffect
+  const originalCopy = JSON.parse(JSON.stringify(props.original));
+  originalCopy[selectedIndex.value][key] = value as VideoEffect | AudioEffect;
 
   props.overwriteVal(
     originalCopy,

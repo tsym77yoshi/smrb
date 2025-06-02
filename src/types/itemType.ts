@@ -302,13 +302,25 @@ export type DrawingItem = ToItemType<typeof drawingItem>;
 
 
 //// Effect
+const effectCategories = [
+  "アニメーション",
+  "カメラ",
+  "加工",
+  "合成",
+  "装飾",
+  "登場退場",
+  "配置",
+  "描画",
+];
 export type EffectPropertyGroup = PropertyGroup & {
   searchName?: string;// 検索時に利用される別名
+  category?: typeof effectCategories[number];// エフェクトの分類
 }
 // VideoEffect
 export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   centerPointEffect: {
     name: "中心位置",
+    category: "描画",
     properties: {
       horizontal: { propertyType: "CenterPointHorizontal", name: "水平位置", min: 0, range: 50, },
       vertical: { propertyType: "CenterPointVertical", name: "垂直位置", min: 0, range: 50, },
