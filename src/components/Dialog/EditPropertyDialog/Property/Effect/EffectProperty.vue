@@ -84,7 +84,7 @@ const getEffectLabel = (effect: VideoEffect | AudioEffect, effectType: EffectsTy
 
 const addEffect = () => {
   props.overwriteVal(
-    props.original.concat([defaultVideoEffects.colorCorrectionEffect/* [""] */]),
+    props.original.concat([defaultVideoEffects.monocolorizationEffect/* [""] */]),
     props.propertyKey,
     true,
   )
