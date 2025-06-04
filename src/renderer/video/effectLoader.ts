@@ -1,14 +1,14 @@
 import { byougaFragmentShaderSources } from "./shaders/byougaShaders";
 
 const nullVertexShaderSource = `
-      attribute vec4 position;
-      attribute vec2 texCoord;
-      varying vec2 vTexCoord;
+attribute vec4 position;
+attribute vec2 texCoord;
+varying vec2 vTexCoord;
   
-      void main() {
-        gl_Position = position;
-        vTexCoord = texCoord;
-      }`;
+void main() {
+  gl_Position = position;
+  vTexCoord = texCoord;
+}`;
 
 export class EffectLoader {
   #gl: WebGLRenderingContext;
