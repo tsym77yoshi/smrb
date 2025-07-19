@@ -83,7 +83,8 @@ const downloadMP4 = async () => {
   URL.revokeObjectURL(url);
 }
 
-const MAX_CONCURRENT = 10;
+// 多いと動作しない(特にスマホ)
+const MAX_CONCURRENT = 3;
 
 const writeVideo = async () => {
   const width = videoInfo.width;
