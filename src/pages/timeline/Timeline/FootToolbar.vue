@@ -1,15 +1,11 @@
 <template>
   <q-footer style="display: flex;">
-    <FootToolButton label="元に戻す" icon="undo" @click="log.undo" />
-    <FootToolButton label="やり直す" icon="redo" @click="log.redo" />
-    <FootToolButton label="ｱｲﾃﾑ分割" icon="content_cut" @click="contentCut" />
-    <FootToolButton label="ｱｲﾃﾑ削除" icon="delete" @click="contentRemove" />
-    <FootToolButton :label="state.isPlaying ? '再生停止' : '再生開始'" icon="play_circle" @click="play" />
-    <FootToolButton label="設定全般" icon="settings" @click="goToSetting" />
+    <FootToolButton v-for="menuItems, index in menuItemsLists" :key="index" :menuItems="menuItems" />
   </q-footer>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import FootToolButton from "./FootToolButton.vue";
 import type { LogAdd, LogProperty } from "@/types/logType";
 import type { Item, AudioItem, VarNumbers, Property } from "@/types/itemType";
@@ -20,6 +16,7 @@ import { useRouter } from "vue-router";
 //import { ReusableAudioPlayer } from "./playAudio";
 import { useFileStore } from "@/store/fileStore";
 import { AudioPlayer } from "@/renderer/audio/audio";
+import type { MenuItem } from "./FootToolButton.vue";
 
 const items = useItemsStore();
 const selections = useSelectionStore();
@@ -29,6 +26,70 @@ const filestore = useFileStore();
 const log = useLogStore();
 const router = useRouter();
 const audioPlayer = new AudioPlayer();
+
+const menuItemsLists = computed<MenuItem[][]>(()=>{return [
+  [
+    {
+      icon: "undo",
+      label: "一つ戻す",
+      action: () => {
+        log.undo();
+      }
+    }, {
+      icon: "redo",
+      label: "一つ進む",
+      action: () => {
+        log.redo();
+      }
+    }
+  ],
+  [
+    {
+      icon: "delete",
+      label: "ｱｲﾃﾑ削除",
+      action: () => {
+        contentRemove();
+      }
+    }
+  ],
+  [
+    {
+      icon: "content_cut",
+      label: "ｱｲﾃﾑ分割",
+      action: () => {
+        contentCut();
+      }
+    }
+  ],
+  [
+    {
+      icon: "highlight_alt",
+      label: "複数選" + (state.userMode == "select" ? "中" : "択"),
+      action: () => {
+        switchUserMode();
+      }
+    }
+  ],
+  [
+    {
+      icon: "play_circle",
+      label: state.isPlaying ? '再生停止' : '再生開始',
+      action: () => {
+        play();
+      }
+    }
+  ],
+  [
+    {
+      icon: "settings",
+      label: "設定全般",
+      action: () => {
+        goToSetting();
+      }
+    },
+    // 動画出力
+  ]
+]})
 
 // ｱｲﾃﾑ分割
 const contentCut = () => {
@@ -84,7 +145,7 @@ const contentCut = () => {
           // @ts-ignore
           const newAnimationValue = animation(item[key] as VarNumbers, itemFrame, oldItem.keyFrames, oldItem.length, videoInfo.fps)
           newVarNumVal.values.push({
-            value:newAnimationValue,
+            value: newAnimationValue,
           });
           // 並べ替え
           newVarNumVal.values.sort((a, b) => a.value - b.value);
@@ -137,6 +198,17 @@ const getKeyFramesKeys = (item: Item): (keyof Item)[] => {
 const contentRemove = () => {
   const removeLog = items.remove(selections.selections);
   log.add([removeLog]);
+}
+
+// 選択モード切り替え
+const switchUserMode = () => {
+  if (state.userMode == "select") {
+    state.userMode = "normal"
+  }
+  else {
+    state.userMode = "select"
+  }
+  console.log("UserMode changed to",state.userMode)
 }
 
 // 再生開始及び停止
