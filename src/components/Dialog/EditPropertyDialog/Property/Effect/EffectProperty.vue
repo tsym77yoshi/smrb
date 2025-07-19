@@ -4,10 +4,11 @@
       <div v-for="effect, index in effects" :key="index" @click="(e) => { selectedIndex = index; e.stopPropagation(); }"
         style="width:100%" :class="{ selectedEffect: selectedIndex == index }">
         <q-checkbox v-model:model-value="effect.isEnabled" @update:model-value="" />
-        {{ getEffectLabel(effect, effectType) }}
+        {{ getEffectLabel(effect, effectKindType) }}
       </div>
     </div>
-    <q-btn @click="addEffect" label="追加" color="primary" />
+    <EffectAdd ref="effectAdd" :onEffectAdd="addEffect" :effectKindType="effectKindType" />
+    <q-btn @click="showAddEffectDialog" label="追加" color="primary" />
     <q-btn @click="removeEffect" :disable="!effects.length" label="削除" color="primary" />
     <PropertyGroups v-if="selectedIndex >= 0" :propertyGroups="editEffect" v-slot="{ property, propertyKey }">
       <PropertyForm v-bind="{
@@ -24,15 +25,15 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { allVideoEffects, type VideoEffect, type AudioEffect, auidoEffectGroup, type TLItem, type KeyFrames } from "@/types/itemType";
+import { allVideoEffectGroup, type EffectKindType, type VideoEffect, type AudioEffect, auidoEffectGroup, type TLItem, type KeyFrames, type EffectType } from "@/types/itemType";
 // 後で移動
-import { defaultVideoEffects } from "@/data/defaultEffects";
+import { defaultVideoEffects, defaultAudioEffects } from "@/data/defaultEffects";
 import PropertyGroups from "../../PropertyGroups.vue";
 import PropertyForm from "../PropertyForm.vue";
 import { propertyGroupToPropertyView } from "../../getPropertyView";
 import type { PropertyGroupView, PropertyView, ChangePropertyValFuncType, ChangeIsEdigtingFuncType, PropertyKey } from "../../propertyViewTypes";
+import EffectAdd from "./EffectAdd.vue";
 
-type EffectsType = "VideoEffects" | "AudioEffects";
 const props = defineProps<{
   property: PropertyView,
   propertyKey: PropertyKey,
@@ -45,8 +46,8 @@ const props = defineProps<{
 const effects = computed<VideoEffect[] | AudioEffect[]>(() => {
   return props.property.valueModel as VideoEffect[] | AudioEffect[]
 })
-const effectType = computed<EffectsType>(() => {
-  return props.property.propertyType as EffectsType
+const effectKindType = computed<EffectKindType>(() => {
+  return props.property.propertyType as EffectKindType
 })
 
 const editEffect = computed<PropertyGroupView[]>(() => {
@@ -55,7 +56,7 @@ const editEffect = computed<PropertyGroupView[]>(() => {
   }
 
   const model = props.property.valueModel[selectedIndex.value] as VideoEffect | AudioEffect;
-  const targetEffects = effectType.value == "VideoEffects" ? allVideoEffects : auidoEffectGroup
+  const targetEffects = effectKindType.value == "VideoEffects" ? allVideoEffectGroup : auidoEffectGroup
 
   const targetKey = Object.keys(targetEffects).find(key => key == model.type)
   if (!targetKey) {
@@ -70,24 +71,33 @@ const editEffect = computed<PropertyGroupView[]>(() => {
 // 負なら非選択
 const selectedIndex = ref<number>(0);
 
-const getEffectLabel = (effect: VideoEffect | AudioEffect, effectType: EffectsType) => {
-  if (effectType === "VideoEffects") {
-    const key = Object.keys(allVideoEffects).find(key => key == effect.type) as keyof typeof allVideoEffects | undefined;
-    return key ? allVideoEffects[key]?.name : "";
-  } else if (effectType === "AudioEffects") {
+const getEffectLabel = (effect: VideoEffect | AudioEffect, effectKindType: EffectKindType) => {
+  if (effectKindType === "VideoEffects") {
+    const key = Object.keys(allVideoEffectGroup).find(key => key == effect.type) as keyof typeof allVideoEffectGroup | undefined;
+    return key ? allVideoEffectGroup[key]?.name : "";
+  } else if (effectKindType === "AudioEffects") {
     const key = Object.keys(auidoEffectGroup).find(key => key == effect.type) as keyof typeof auidoEffectGroup | undefined;
     return key ? auidoEffectGroup[key]?.name : "";
   }
-  console.log(effectType)
   return "";
 }
 
-const addEffect = () => {
+const effectAdd = ref();
+const addEffect = (key: EffectType) =>{
+  const pickUpedEffect =effectKindType.value == "VideoEffects"
+    ? defaultVideoEffects[key as keyof typeof defaultVideoEffects]
+    : defaultAudioEffects[key as keyof typeof defaultAudioEffects];
+  if (!pickUpedEffect) {
+    return;
+  }
   props.overwriteVal(
-    props.original.concat([defaultVideoEffects.monocolorizationEffect/* [""] */]),
+    props.original.concat([pickUpedEffect]),
     props.propertyKey,
     true,
   )
+}
+const showAddEffectDialog = () => {
+  effectAdd.value.show();
 }
 const removeEffect = () => {
   if (selectedIndex.value < 0 || props.original.length <= selectedIndex.value) {

@@ -1,4 +1,4 @@
-import { allVideoEffects, type DrawingItem, type ToEffectType } from "@/types/itemType";
+import { allVideoEffectGroup, type DrawingItem, type ToEffectType } from "@/types/itemType";
 import type { ItemOption } from "./rendererTypes";
 import type { CurveConverter } from "./curveConverter";
 import { EffectLoader } from "./effectLoader";
@@ -45,6 +45,36 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
     let isNullVertexShader = false;
     // fragment + vertexShader
     switch (effect.type) {
+      case "cropEffect":
+        // 完全cropならcontinue
+        const cropedWidth = itemOption.width - (cConv.getVarNum(effect.left) + cConv.getVarNum(effect.right));
+        const cropedHeight = itemOption.height - (cConv.getVarNum(effect.top) + cConv.getVarNum(effect.bottom));
+        if (cropedHeight <= 0 || cropedWidth <= 0) {
+          continue;
+        }
+        // 上下左右
+        const cropRates = [
+          cConv.getVarNum(effect.top) / itemOption.height,
+          cConv.getVarNum(effect.bottom) / itemOption.height,
+          cConv.getVarNum(effect.left) / itemOption.width,
+          cConv.getVarNum(effect.right) / itemOption.width,
+        ];
+        gl.viewport(0, 0, cropedWidth, cropedHeight);
+        // itemOptionの変更
+        const positions = new Float32Array([
+          1, 1, 1 - cropRates[3], 1,// x y u v
+          1, -1, 1 - cropRates[3], 0,
+          -1, 1, cropRates[2], 1,
+          -1, -1, cropRates[2], 0,
+        ]);
+        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+        const positionLoc = gl.getAttribLocation(effectProgram, "position");
+        gl.enableVertexAttribArray(positionLoc);
+        gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 16, 0);
+        const texCoordLoc = gl.getAttribLocation(effectProgram, "texCoord");
+        gl.enableVertexAttribArray(texCoordLoc);
+        gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 16, 8);
+        break;
       default:
         isNullVertexShader = true;
         break;
@@ -67,7 +97,6 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
       case "directionalBlurEffect":
       case "gaussianBlurEffect":
       case "cropByAngleEffect":
-      case "cropEffect":
     }
 
     // 書き込み先: writeTex
@@ -112,7 +141,7 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
   return readTex; // 最終結果は最後に読み込みに使っていた方
 }
 
-const applyCenterPointEffect = (effect: ToEffectType<typeof allVideoEffects["centerPointEffect"], "centerPointEffect">, itemOption: ItemOption, cConv: CurveConverter) => {
+const applyCenterPointEffect = (effect: ToEffectType<typeof allVideoEffectGroup["centerPointEffect"], "centerPointEffect">, itemOption: ItemOption, cConv: CurveConverter) => {
   let originalPivotX: number = itemOption.pivotX;
   let originalPivotY: number = itemOption.pivotY;
   switch (effect.horizontal) {

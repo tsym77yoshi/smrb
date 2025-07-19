@@ -302,7 +302,7 @@ export type DrawingItem = ToItemType<typeof drawingItem>;
 
 
 //// Effect
-const effectCategories = [
+export const videoEffectCategories = [
   "アニメーション",
   "カメラ",
   "加工",
@@ -312,6 +312,12 @@ const effectCategories = [
   "配置",
   "描画",
 ];
+export const audioEffectCategories = [
+  "エフェクト",
+  "フィルター",
+  "基本"
+];
+const effectCategories = [...videoEffectCategories, ...audioEffectCategories];
 export type EffectPropertyGroup = PropertyGroup & {
   searchName?: string;// 検索時に利用される別名
   category?: typeof effectCategories[number];// エフェクトの分類
@@ -331,12 +337,14 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   borderBlurEffect: {
     name: "境界ぼかし",
+    category: "加工",
     properties: {
       blur: { propertyType: "VarNumbers", name: "ぼかし度", min: 0, range: 50, },
     }
   },
   gaussianBlurEffect: {
     name: "ぼかし",
+    category: "加工",
     properties: {
       blur: { propertyType: "VarNumbers", name: "ぼかし度", min: 0, range: 50, },
       isHardBorderMode: { propertyType: "boolean", name: "サイズを固定", },
@@ -345,6 +353,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   shadowEffect: {
     name: "影",
     searchName: "シャドー",
+    category: "装飾",
     properties: {
       x: { propertyType: "VarNumbers", name: "X", unit: "px", range: 100, },
       y: { propertyType: "VarNumbers", name: "Y", unit: "px", range: 100, },
@@ -359,6 +368,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   outlineEffect: {
     name: "縁取り",
+    category: "装飾",
     properties: {
       strokeThickness: { propertyType: "VarNumbers", name: "太さ", unit: "px", min: 0, range: 10, },
       blur: { propertyType: "VarNumbers", name: "ぼかし", unit: "px", min: 0, range: 10, },
@@ -375,6 +385,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   cropByAngleEffect: {
     name: "斜めクリッピング",
+    category: "合成",
     properties: {
       x: { propertyType: "VarNumbers", name: "X", unit: "px", range: 100, },
       y: { propertyType: "VarNumbers", name: "Y", unit: "px", range: 100, },
@@ -385,6 +396,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   monocolorizationEffect: {
     name: "単色化",
+    category: "加工",
     properties: {
       strength: { propertyType: "VarNumbers", name: "強さ", unit: "%", min: 0, max: 100, },
       color: { propertyType: "ColorHEXA", name: "縁色", },
@@ -392,7 +404,8 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
     }
   },
   opacityEffect: {
-    name: "不透明",
+    name: "不透明度",
+    category: "描画",
     properties: {
       opacity: { propertyType: "VarNumbers", name: "不透明度", unit: "%", min: 0, max: 100 },
       isAbsolute: { propertyType: "boolean", name: "絶対値", },
@@ -401,6 +414,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   tilingEffect: {
     name: "敷き詰め",
     searchName: "画像ループ",
+    category: "配置",
     properties: {
       x: { propertyType: "VarNumbers", name: "横", min: 1, range: 10, },
       y: { propertyType: "VarNumbers", name: "縦", min: 1, range: 10, },
@@ -409,6 +423,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   marginEffect: {
     name: "余白追加",
     searchName: "領域拡張",
+    category: "描画",
     properties: {
       top: { propertyType: "VarNumbers", name: "上", unit: "px", min: 0, range: 100, },
       bottom: { propertyType: "VarNumbers", name: "下", unit: "px", min: 0, range: 100, },
@@ -433,6 +448,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   }, */
   colorCorrectionEffect: {
     name: "色調補正",
+    category: "加工",
     properties: {
       lightness: { propertyType: "VarNumbers", name: "明るさ", unit: "%", min: 0, range: 100, },
       contrast: { propertyType: "VarNumbers", name: "コントラスト", unit: "%", min: 0, range: 100, },
@@ -443,6 +459,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   cropEffect: {
     name: "クリッピング",
+    category: "合成",
     properties: {
       top: { propertyType: "VarNumbers", name: "上", unit: "px", min: 0, range: 500, },
       bottom: { propertyType: "VarNumbers", name: "下", unit: "px", min: 0, range: 500, },
@@ -453,6 +470,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   jumpEffect: {
     name: "跳ねる",
+    category: "アニメーション",
     properties: {
       jumpHeight: { propertyType: "VarNumbers", name: "跳ね高さ", unit: "px", min: 0, range: 500, },
       stretch: { propertyType: "VarNumbers", name: "跳ね伸び", unit: "%", min: 0, range: 30, },
@@ -465,6 +483,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   radialBlurEffect: {
     name: "放射ブラー",
+    category: "加工",
     properties: {
       blur: { propertyType: "VarNumbers", name: "サイズ", min: 0, max: 75, },
       x: { propertyType: "VarNumbers", name: "中心X", unit: "px", range: 500, },
@@ -474,15 +493,17 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   directionalBlurEffect: {
     name: "方向ブラー",
+    category: "加工",
     properties: {
       standardDeviation: { propertyType: "VarNumbers", name: "ぼかし度", min: 0, max: 250, },
       angle: { propertyType: "VarNumbers", name: "回転角", unit: "°", range: 360, },
       isHardBorderMode: { propertyType: "boolean", name: "サイズを固定", },
     }
   },
-  zoomEffect:{
-    name:"拡大縮小",
-    properties:{
+  zoomEffect: {
+    name: "拡大縮小",
+    category: "描画",
+    properties: {
       zoom: { propertyType: "VarNumbers", name: "全体", unit: "%", min: 0, range: 500, },
       zoomX: { propertyType: "VarNumbers", name: "横方向", unit: "%", range: 500, },
       zoomY: { propertyType: "VarNumbers", name: "縦方向", unit: "%", range: 500, },
@@ -501,6 +522,7 @@ const inOutEffectCommonProperties/* : EffectPropertyGroup["properties"] */ = {
 export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   inOutGaussianBlurEffect: {
     name: "ぼかしを解除しながら登場退場",
+    category: "登場退場",
     properties: {
       ...inOutEffectCommonProperties,
       value: { propertyType: "number", name: "ぼかし度", min: 0, range: 10, },
@@ -508,6 +530,7 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   inOutMosaicEffect: {
     name: "モザイクを解除しながら登場退場",
+    category: "登場退場",
     properties: {
       ...inOutEffectCommonProperties,
       value: { propertyType: "number", name: "サイズ", unit: "px", min: 0, range: 500, },
@@ -515,15 +538,17 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   inOutMoveEffect: {
     name: "移動しながら登場退場",
+    category: "登場退場",
     properties: {
       ...inOutEffectCommonProperties,
       value: { propertyType: "number", name: "X", unit: "px", range: 500, },
       value1: { propertyType: "number", name: "Y", unit: "px", range: 500, },
-      value2: { propertyType: "number", name: "Z", unit: "px", range: 500, hideLevel: "3d"},
+      value2: { propertyType: "number", name: "Z", unit: "px", range: 500, hideLevel: "3d" },
     }
   },
   inOutMoveFromOutsideFrameEffect: {
     name: "画面外から登場退場",
+    category: "登場退場",
     properties: {
       ...inOutEffectCommonProperties,
       value: { propertyType: "Direction", name: "方向" },
@@ -531,16 +556,18 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   inOutRotateEffect: {
     name: "回転しながら登場退場",
+    category: "登場退場",
     properties: {
       ...inOutEffectCommonProperties,
       valueX: { propertyType: "number", name: "X軸", unit: "°", range: 360, },
       valueY: { propertyType: "number", name: "Y軸", unit: "°", range: 360, },
       valueZ: { propertyType: "number", name: "Z軸", unit: "°", range: 360, },
-      is3D: { propertyType: "boolean", name: "三次元配置", hideLevel:"3d" },
+      is3D: { propertyType: "boolean", name: "三次元配置", hideLevel: "3d" },
     }
   },
   inOutZoomEffect: {
     name: "拡大しながら登場退場",
+    category: "登場退場",
     properties: {
       ...inOutEffectCommonProperties,
       value: { propertyType: "number", name: "全体", unit: "%", min: 0, range: 400, },
@@ -551,6 +578,7 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   // 複雑だったので後回し
   /* inOutGetUpEffect:{
     name:"起き上がりながら登場退場",
+    category: "登場退場",
     properties:{
       ...inOutEffectCommonProperties,
       effectTimeSeconds: {propertyType:"number",name:"効果時間",unit:"秒",min:0,range:0.5,step:0.01},
@@ -558,6 +586,7 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   }, */
   inOutJumpEffect: {
     name: "跳ねながら登場退場",
+    category: "登場退場",
     properties: {
       ...inOutEffectCommonProperties,
       jumpHeight: { propertyType: "number", name: "跳ね高さ", unit: "px", min: 0, range: 500, },
@@ -571,23 +600,25 @@ export const inOutEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
   },
   inOutMoveFromOutsideImageEffect: {
     name: "領域外から登場退場",
+    category: "登場退場",
     properties: {
       ...inOutEffectCommonProperties,
       value: { propertyType: "Direction", name: "方向" },
     }
   },
 } as const;
-export const allVideoEffects = {
+export const allVideoEffectGroup = {
   ...videoEffectGroup,
   ...inOutEffectGroup,
 } as const;
 export const auidoEffectGroup = {
-  echoEffect:{
-    name:"エコー",
-    properties:{
-      strength: {propertyType:"VarNumbers",name:"強度",unit:"%",min:0,max:100,},
-      delay: {propertyType:"VarNumbers",name:"遅延",unit:"㍉秒",min:0,range:50,step:1,},
-      feedBack:{propertyType:"VarNumbers",name:"フィードバック",unit:"%",min:0,max:100,},
+  echoEffect: {
+    name: "エコー",
+    category: "エフェクト",
+    properties: {
+      strength: { propertyType: "VarNumbers", name: "強度", unit: "%", min: 0, max: 100, },
+      delay: { propertyType: "VarNumbers", name: "遅延", unit: "㍉秒", min: 0, range: 50, step: 1, },
+      feedBack: { propertyType: "VarNumbers", name: "フィードバック", unit: "%", min: 0, max: 100, },
     }
   },
 } as const;
@@ -595,12 +626,13 @@ export type ToEffectType<T extends Readonly<EffectPropertyGroup>, U extends stri
   type: U;
   isEnabled: boolean;
 };
-export type VideoEffectType = keyof typeof allVideoEffects;
+export type EffectKindType = "VideoEffects" | "AudioEffects";
+export type VideoEffectType = keyof typeof allVideoEffectGroup;
 export type AudioEffectType = keyof typeof auidoEffectGroup;
 export type EffectType = VideoEffectType | AudioEffectType;
 export type VideoEffect = {
-  [K in keyof typeof allVideoEffects]: ToEffectType<(typeof allVideoEffects)[K], K>
-}[keyof typeof allVideoEffects];
+  [K in keyof typeof allVideoEffectGroup]: ToEffectType<(typeof allVideoEffectGroup)[K], K>
+}[keyof typeof allVideoEffectGroup];
 export type AudioEffect = {
   [K in keyof typeof auidoEffectGroup]: ToEffectType<(typeof auidoEffectGroup)[K], K>
 }[keyof typeof auidoEffectGroup];
