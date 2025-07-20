@@ -1,21 +1,18 @@
 <template>
-  <div>
-    <!-- メインボタン -->
-    <q-btn square color="primary" class="icon" glossy fab dense padding="1rem 0.1rem"
-      :icon="menuItems[0].icon" :label="menuItems[0].label" @click="menuItems[0].action"
-      v-touch-pan.prevent.mouse="onPan">
+  <!-- メインボタン -->
+  <q-btn square color="primary" class="icon" stack glossy padding="1rem 0.1rem" :icon="menuItems[0].icon"
+    :label="menuItems[0].label" @click="menuItems[0].action" v-touch-pan.prevent.mouse="onPan">
 
-      <!-- スワイプで出てくるボタン一覧 -->
-      <q-menu anchor="bottom left" v-model="fade" class="column">
-        <q-list>
-          <q-item v-for="item in menuItems.reverse()" :key="item.label" clickable
-            @click="() => { item.action(); fade=false; }">
-            <q-item-section>{{ item.label }}</q-item-section>
-          </q-item>
-        </q-list>
-      </q-menu>
-    </q-btn>
-  </div>
+    <!-- スワイプで出てくるボタン一覧 -->
+    <q-menu anchor="bottom left" v-model="fade" class="column">
+      <q-list>
+        <q-item v-for="item in menuItems.reverse()" :key="item.label" clickable
+          @click="() => { item.action(); fade = false; }">
+          <q-item-section>{{ item.label }}</q-item-section>
+        </q-item>
+      </q-list>
+    </q-menu>
+  </q-btn>
 </template>
 
 <script setup lang="ts">
