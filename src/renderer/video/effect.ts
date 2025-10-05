@@ -132,6 +132,9 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
 
     // 入れ替え
     const tmp = readTex;
+    if (!writeTex) {
+      throw new Error("writeTex is undefined");
+    }
     readTex = writeTex;
     writeTex = tmp;
   }

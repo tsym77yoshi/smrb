@@ -11,7 +11,7 @@ import { useFileStore } from "@/store/fileStore";
 import FullPageDialog from "@/components/DialogPage/FullPageDialog.vue";
 import ButtonsDialog from "@/components/DialogPage/ButtonsDialog.vue";
 import type { ButtonItemType } from "@/components/DialogPage/ButtonsDialog.vue";
-import Log from "@/components/Utilities/log.vue";
+import Log from "@/components/Utilities/Log.vue";
 import { encode } from "@/renderer/encode";
 
 const fileStore = useFileStore();

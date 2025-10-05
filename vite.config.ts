@@ -5,6 +5,7 @@ import { quasar, transformAssetUrls } from "@quasar/vite-plugin";
 import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
+  base: "smrb",
   server: {
     host: true,
   },
