@@ -23,7 +23,7 @@ type PropertyTypeMap = {
   VideoEffects: VideoEffect[];
   AudioEffects: AudioEffect[];
   FileId: FileId;
-  CharacterName: CharacterName;
+  CharacterId: CharacterId;
   Serif: Serif;
   Time: Time;
   Font: Font;
@@ -134,7 +134,7 @@ const timeChangeProperty = {
   contentOffset: { propertyType: "Time", name: "再生開始位置", unit: "秒", },
 } as const;
 const characterProperty = {
-  characterName: { propertyType: "CharacterName", name: "キャラクター", }
+  characterId: { propertyType: "CharacterId", name: "キャラクター", }
 } as const;
 // VoiceItemでaudioPropertyに似たものを別でかいている点に注意
 const audioProperty = {
@@ -703,7 +703,7 @@ export type VarNumbers = {
 export type ItemType = keyof typeof itemPropertyGroups;
 
 type FileId = number;
-type CharacterName = string;
+type CharacterId = number;
 type Serif = string;
 type Time = number;// YMM4だと"00:00:00"だが、ここでは秒数で扱う
 type Font = string;

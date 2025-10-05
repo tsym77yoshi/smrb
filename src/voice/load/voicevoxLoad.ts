@@ -17,7 +17,7 @@ type Speaker = {
   speakerIds: number[];
   name: string;
 }
-export const speakers: Speaker[] = [
+const speakers: Speaker[] = [
   { speakerIds: [2, 0, 6, 4, 36, 37,], name: "四国めたん" },
   { speakerIds: [3, 1, 7, 5, 22, 38, 75, 76,], name: "ずんだもん" },
   { speakerIds: [8,], name: "春日部つむぎ" },
@@ -57,7 +57,16 @@ export const speakers: Speaker[] = [
   { speakerIds: [107,], name: "東北ずん子" },
   { speakerIds: [108,], name: "東北きりたん" },
   { speakerIds: [109,], name: "東北イタコ" },
-]
+];
+
+export const searchVoicevoxSpeakerName = (speakerId: number): string | undefined => {
+  for (const speaker of speakers) {
+    if (speaker.speakerIds.includes(speakerId)) {
+      return speaker.name;
+    }
+  }
+  return undefined;
+}
 
 // 順番_speakerIdのファイル名
 

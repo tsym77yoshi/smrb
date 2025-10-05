@@ -4,14 +4,19 @@ import type { ColorHEXA } from '@/types/utilityType';
 import type { VoiceItem } from '@/types/itemType';
 import type { Character } from '@/types/charaType';
 
-export const useCharaStore = defineStore('chara', () => {
-  const charas = ref<Character[]>([]);
-  return { charas }
+export const useCharacterStore = defineStore('chara', () => {
+  const characters = ref<Character[]>([]);
+
+  const getCharacterIdByName = (name: string) => {
+    return characters.value.find((chara) => chara.name == name)?.characterId;
+  }
+
+  return { characters, getCharacterIdByName }
 }, {
   persist: {
-    key: "chara",
+    key: "character",
     storage: localStorage,
-    pick: ["charas"],
+    pick: ["characters"],
   }
 });
 

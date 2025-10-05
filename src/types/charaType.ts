@@ -13,7 +13,7 @@ export type Character = {
   charaTerms: string;// キャラクターの利用規約
   remark: string; // メモ
   tachies: Tachie[];
-  // 字幕はキャラに紐づけるのではなくする
+  // 字幕はキャラに紐づける
 }
 type Tachie = {
   tachieType: "ichimai" | "psd";
