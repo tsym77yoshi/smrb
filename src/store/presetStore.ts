@@ -2,18 +2,8 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { ColorHEXA } from '@/types/utilityType';
 import type { VoiceItem } from '@/types/itemType';
+import type { Character } from '@/types/charaType';
 
-type Character = {
-  name: string;
-  groupName: string;
-  color: ColorHEXA;
-  layer: 0;// 未実装
-  // keyGesture
-  voice: {
-    API: string;// NONE
-    arg: string;
-  };
-}
 export const useCharaStore = defineStore('chara', () => {
   const charas = ref<Character[]>([]);
   return { charas }

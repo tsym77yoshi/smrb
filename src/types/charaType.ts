@@ -1,20 +1,22 @@
 import type { ColorHEXA } from "./utilityType";
-import type { VoiceItem } from "./itemType";
 
 export type Character = {
+  characterId: number;
   name: string;
-  software: string; // ソフト名(同名キャラクターで別ソフトがあるので), 例: 小夜/SAYO CoeFontとVoicevox等
-  color: ColorHEXA;
+  groupName: string;
+  software: string; // ソフト名(同名キャラクターで別ソフトがあるので)
+  color1: ColorHEXA;
+  color2: ColorHEXA;
   credit: string; // クレジット
   parentContentId: string; // 親作品ID(スペース区切りでいけるように)
   audioTerms: string;// 音声の利用規約
   charaTerms: string;// キャラクターの利用規約
   remark: string; // メモ
-  tachie: Tachie;
-  jimaku: VoiceItem;
+  tachies: Tachie[];
+  // 字幕はキャラに紐づけるのではなくする
 }
 type Tachie = {
-  //tachieType:"";
+  tachieType: "ichimai" | "psd";
   fileIds: number[];
   remark: string;
 }

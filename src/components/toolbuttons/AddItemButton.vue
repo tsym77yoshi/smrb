@@ -56,7 +56,7 @@ const addTachieItem = () => { };
 
 const actions: { name: string, action: () => void, icon: string }[] = [
   { name: "ボイス", action: addVoiceItem, icon: "chat" },
-  { name: "ボイス（from 台本）", action: addVoiceScript, icon: "chat" },
+  { name: "ボイス（複数）", action: addVoiceScript, icon: "chat" },
   { name: "テキスト", action: addTextItem, icon: "text_fields" },
   { name: "動画", action: addVideoItem, icon: "videocam" },
   { name: "音声", action: addAudioItem, icon: "music_note" },

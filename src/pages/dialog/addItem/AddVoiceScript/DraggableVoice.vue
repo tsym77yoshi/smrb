@@ -1,3 +1,4 @@
+<!-- いつか作る -->
 <template>
   <div>
     <div>
@@ -5,7 +6,7 @@
         <div style="display: flex;width: 100%; align-items: stretch;height:100%;overflow-y: scroll;">
           <div class="flex-child left-element">
             <q-item dense v-for="(element, index) in audios" :key="index" class="serif" style="margin:1px 0">
-              <CharaIcon character-name="小夜ちゃん"/>
+              <CharaIcon character-name=""/>
               <div style="overflow: hidden;">{{ element.name }}</div>
             </q-item>
           </div>

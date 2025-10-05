@@ -9,7 +9,7 @@ export type FileInfo = {
   duration?: number;// ファイルの秒数(あるものだけ)
 } & FileSearchInfo & FileCreditDetail;
 export type FileStatus = "unload" | "loading" | "loaded" | "missing" | "error";
-export const fileTypes = ["image", "audio", "video"] as const;
+export const fileTypes = ["image", "audio", "video", "voice"] as const;
 export type FileType = typeof fileTypes[number];
 export type FileSearchInfo = {
   name: string;

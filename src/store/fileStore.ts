@@ -159,6 +159,10 @@ export const useFileStore = defineStore("file", () => {
     return storeInfos.value.find((file) => file.id == fileId)
   }
 
+  const remove = (fileId: number) => {
+    // TODO:後で書く
+  }
+
   const resetFileInfoStatus = () => {
     storeInfos.value.forEach((info) => {
       info.status = "unload";
