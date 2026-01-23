@@ -35,15 +35,18 @@
       <div class="scroll">
         <q-card v-for="voiceView in voiceViews" :key="voiceView.fileId" class="col-4"
           style="padding: 0;overflow: hidden;" bordered flat>
-          <!--q-img src=""></q-img-->
-          <q-card-section style="padding:0">
-            <div class="text-h6">{{ voiceView.characterId }}</div>
-            <div class="text-h6">{{ voiceView.fileName }}</div>
+          <q-card-section horizontal>
+            <q-card-section style="padding:0" class="col">
+              <div class="text-h6">{{ voiceView.characterId }}</div>
+              <div class="text-h6">{{ voiceView.fileName }}</div>
+              <q-input filled v-model="voiceView.text" type="textarea" autogrow />
+            </q-card-section>
+          
+            <q-card-actions vertical class="justify-around q-px-md">
+              <q-btn flat round icon="arrow_drop_up" />
+              <q-btn flat round icon="arrow_drop_down" />
+            </q-card-actions>
           </q-card-section>
-          <q-card-actions align="left">
-            <q-btn flat label="閉じる"></q-btn>
-          </q-card-actions>
-          <q-input filled v-model="voiceView.text" label="Filled" />
         </q-card>
       </div>
     </q-card-section>
@@ -58,6 +61,7 @@ import { defaultVoice } from '@/data/defaultItem';
 import { useItemsStore, useStateStore, useSelectionStore, useLogStore } from "@/store/tlStore";
 import { useCharacterStore } from '@/store/presetStore';
 import { searchVoicevoxSpeakerName } from "./voicevoxLoad"
+import { removeExtension, removeUnderscore} from "@/composables/splitText"
 
 const items = useItemsStore();
 const state = useStateStore();
@@ -75,17 +79,35 @@ type VoiceView = {
 }
 const voiceViews = ref<VoiceView[]>([]);
 
+type FileNameAndText = {
+  fileName: string,
+  text: string,
+}
+
 const openFolder = () => {
   const fileInput = document.createElement("input");
   fileInput.type = "file";
-  fileInput.accept = "audio/*";// すべてが正しく読み込めるか不明
+  fileInput.accept = "audio/*,.txt";// すべてが正しく読み込めるか不明
   fileInput.multiple = true;
   fileInput.addEventListener("change", async (event: Event) => {
     let tempVoiceViews: VoiceView[] = [];
     const target = event.target as HTMLInputElement;
 
     const files = (target.files as FileList);
+    let fileNameAndTexts:FileNameAndText[] = [];
+    let fileAddQueue = 0;
     for (const file of files) {
+      if(file.type == "text/plain") {
+        fileAddQueue++;
+        file.text().then((text) => {
+          fileNameAndTexts.push({
+            fileName: file.name,
+            text: text,
+          });
+          fileAddQueue--;
+        });
+        continue;
+      }
       // デフォルトのファイル情報
       const fileSearchInfo: FileSearchInfo = {
         name: file.name,
@@ -108,9 +130,18 @@ const openFolder = () => {
       tempVoiceViews.push({
         fileId: fileId,
         fileName: file.name,
-        characterId: 0,
+        characterId: -1,
         text: "",
       })
+    }
+    // テキスト読み込みがすべて終わるまで待つ
+    while(fileAddQueue > 0){
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    for(const fileNameAndText of fileNameAndTexts){
+      const tempVoiceView = tempVoiceViews.find((tempVoiceView) => removeExtension(tempVoiceView.fileName) == removeExtension(fileNameAndText.fileName));
+      if(!tempVoiceView) continue;
+      tempVoiceView.text = fileNameAndText.text;
     }
     loadVoiceWay.value?.onLoadAction(tempVoiceViews);
   });
@@ -123,16 +154,16 @@ const loadVoicevoxRenban_SpeakerId = (tempVoiceViews: VoiceView[], isNameInFileN
 
   // characterIdを割り当てる
   for(const tempVoiceView of tempVoiceViews){
+    if(isNameInFileName){
+      tempVoiceView.text = removeExtension(removeUnderscore(tempVoiceView.fileName, 2));
+    }
     const characterName = searchVoicevoxSpeakerName(Number(tempVoiceView.fileName.split("_")[1]));
     if (!characterName) continue;
     const characterId = character.getCharacterIdByName(characterName);
     if(!characterId) continue;
     tempVoiceView.characterId = characterId;
-    if(isNameInFileName){
-      tempVoiceView.text = tempVoiceView.fileName.split("_")[2];
-    }
   }
-  voiceViews.value = tempVoiceViews;
+  voiceViews.value.push(...tempVoiceViews);
 }
 const loadVoicevoxRenban_SpeakerId_text = (tempVoiceViews: VoiceView[]) => {
   loadVoicevoxRenban_SpeakerId(tempVoiceViews, true);

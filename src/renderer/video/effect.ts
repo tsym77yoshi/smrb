@@ -160,7 +160,7 @@ const applyCenterPointEffect = (effect: ToEffectType<typeof allVideoEffectGroup[
       itemOption.pivotX = 0;
       break;
     case "Custom":
-      itemOption.pivotX = cConv.getVarNum(effect.x);
+      itemOption.pivotX = -cConv.getVarNum(effect.x);
       break;
   }
   switch (effect.vertical) {

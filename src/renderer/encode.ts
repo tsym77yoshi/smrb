@@ -5,7 +5,7 @@ import muxjs from "mux.js";
 import { encodeByFFmpeg } from "./encodeByFFmpeg";
 
 // audioEncoderが存在していればそれを使い、していなければMediaRecorderを使う
-/* 
+
 let items: ReturnType<typeof useItemsStore>;
 let state: ReturnType<typeof useStateStore>;
 let videoInfo: ReturnType<typeof useVideoInfoStore>;
@@ -16,20 +16,20 @@ const firstLoad = () => {
     state = useStateStore();
     videoInfo = useVideoInfoStore();
   }
-} */
+}
 
 // 推奨形式について: https://qa.nicovideo.jp/faq/show/5685?site_domain=default
-/* const H264_CODEC = "avc1.640028";// H264. high profile, なんか, lv
+const H264_CODEC = "avc1.640028";// H264. high profile, なんか, lv
 const autoBitrate = [
   { height: 1080, bitrate: 12_000_000 },
   { height: 720, bitrate: 6_000_000 },
   { height: 480, bitrate: 2_000_000 },
-] */
+]
 
 export const encode = async (displayMessage: (message: string) => void) => {
   encodeByFFmpeg(displayMessage);
   return;
-  /* firstLoad();
+  firstLoad();
   if (items.lastFrame == 0) {
     return;
   }
@@ -39,13 +39,13 @@ export const encode = async (displayMessage: (message: string) => void) => {
     return;
   }
 
-  firstLoad();
+  // firstLoad();
   await encodeVideo();
   await encodeAudio();
 
   console.log("動画と音声のエンコードが完了しました。ダウンロードを開始します。");
-  downloadMP4(); */
-}/* 
+  downloadMP4();
+}
 const encodeVideo = async () => {
   console.log(videoInfo.height)
   const offscreen = new OffscreenCanvas(videoInfo.width, videoInfo.height);
@@ -75,16 +75,18 @@ const encodeVideo = async () => {
   const encoder = new VideoEncoder(init);
   encoder.configure(config);
 
-  /* for (let i = 0; i < items.lastFrame; i++) {
+  /*for (let i = 0; i < items.lastFrame; i++) {
     renderer.renderNotWaitLoad(i, items.layers);
     const frame = new VideoFrame(offscreen, { timestamp: i * (1_000_000 / videoInfo.fps) }); // マイクロ秒なので1_000_000倍
     encoder.encode(frame);
     //frame.close();
     setTimeout(() => frame.close(), 0);
-  };
+    console.log(i);
+  };*/
   const frameQueue: VideoFrame[] = [];
 
   for (let i = 0; i < items.lastFrame; i++) {
+    if(i%100===0)console.log(i);
     renderer.renderNotWaitLoad(i, items.layers);
 
     const frame = new VideoFrame(offscreen, {
@@ -102,12 +104,15 @@ const encodeVideo = async () => {
       }
     }
   }
+  console.log("a")
 
   // 残っているフレームもすべて遅延してclose
   frameQueue.forEach(f => setTimeout(() => f.close(), 0));
 
+  console.log("b")
 
   await encoder.flush().then(() => {
+  console.log("c")
     encoder.close();
     console.log('VideoEncoderはflush、closeが完了しました');
   });
@@ -132,43 +137,64 @@ const encodeAudioWithAudioEncoder = async (audioBuffer: AudioBuffer) => {
   const numberOfChannels = audioBuffer.numberOfChannels;
   const sampleRate = audioBuffer.sampleRate;
 
+  if (numberOfChannels === 0) {
+    console.error("AudioBuffer has 0 channels. Skipping audio encoding.");
+    return;
+  }
+
   const init: AudioEncoderInit = {
     output: handleAudioChunk,
     error: (e) => console.error("AudioEncoder error:", e),
   };
 
   const encoder = new AudioEncoder(init);
-  encoder.configure({
-    codec: "aac", // MP4互換なら 'aac' だが非対応のことがある
-    numberOfChannels,
-    sampleRate,
+  const config = {
+    codec: "mp4a.40.2",
+    sampleRate: sampleRate,
+    numberOfChannels: numberOfChannels,
     bitrate: 128_000,
-  });
+  }
+  const { supported } = await AudioEncoder.isConfigSupported(config);
+  if (!supported) {
+    console.error("形式がサポートされていません");
+    alert("形式がサポートされていません");
+    return;
+  }
+  encoder.configure(config);
 
-  const frameCount = audioBuffer.length;
-  const buffer = new Float32Array(frameCount * numberOfChannels);
+  const totalFrames = audioBuffer.length;
+  
+  // メモリ効率のため、巨大なバッファを一度に確保せず、チャンクごとに処理する
+  const CHUNK_SIZE = 4096;
+  
+  for (let i = 0; i < totalFrames; i += CHUNK_SIZE) {
+    const len = Math.min(CHUNK_SIZE, totalFrames - i);
+    const chunkBuffer = new Float32Array(len * numberOfChannels);
 
-  // interleave channels
-  for (let i = 0; i < frameCount; i++) {
+    // インターリーブ処理 (チャンク分のみ)
     for (let ch = 0; ch < numberOfChannels; ch++) {
-      buffer[i * numberOfChannels + ch] = audioBuffer.getChannelData(ch)[i];
+      const channelData = audioBuffer.getChannelData(ch);
+      for (let j = 0; j < len; j++) {
+        chunkBuffer[j * numberOfChannels + ch] = channelData[i + j];
+      }
     }
+
+    const audioData = new AudioData({
+      format: "f32",
+      sampleRate: sampleRate,
+      numberOfFrames: len,
+      numberOfChannels: numberOfChannels,
+      timestamp: Math.round(i * 1_000_000 / sampleRate), // マイクロ秒単位 (整数)
+      data: chunkBuffer,
+    });
+
+    encoder.encode(audioData);
+    audioData.close(); // リソース解放
   }
 
-  const audioData = new AudioData({
-    format: "f32",
-    sampleRate,
-    numberOfFrames: frameCount,
-    numberOfChannels,
-    timestamp: 0,
-    data: buffer,
-  });
-
-  encoder.encode(audioData);
-  await encoder.flush().then(() => {
-    console.log('AudioEncoder flush completed');
-    encoder.close();
-  });
+  await encoder.flush();
+  console.log('AudioEncoder flush completed');
+  encoder.close();
 };
 const encodeAudioWithMediaRecorder = async (): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -252,4 +278,4 @@ const downloadMP4 = () => {
 
   muxer.flush();
   console.log("flushed")
-} */
+}
