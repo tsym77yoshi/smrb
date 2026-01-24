@@ -1,13 +1,35 @@
 export const byougaFragmentShaderSources: Record<string, string> = {
   monocolorizationEffect:`
 precision mediump float;
+
 varying vec2 vTexCoord;
+
 uniform sampler2D texture;
 uniform vec4 monolizeColor;
 
+/**
+ * 0.0: 輝度を保持しない（従来動作）
+ * 1.0: 輝度を保持する
+ */
+uniform float keepLuminance;
+
 void main() {
   vec4 color = texture2D(texture, vTexCoord);
-  gl_FragColor = vec4(monolizeColor.rgb, color.a * monolizeColor.a);
+
+  // 輝度計算
+  float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+
+  // 輝度保持 or 単色化
+  vec3 monoRgb = mix(
+    monolizeColor.rgb,
+    monolizeColor.rgb * luminance,
+    keepLuminance
+  );
+
+  gl_FragColor = vec4(
+    monoRgb,
+    color.a * monolizeColor.a
+  );
 }`,
   colorCorrectionEffect: `
 precision highp float;
@@ -80,6 +102,115 @@ void main() {
 
   gl_FragColor = vec4(clamp(c, 0.0, 1.0), src.a);
 }`,
+  borderBlurEffect:`
+precision mediump float;
+uniform sampler2D u_texture;
+uniform float u_blur;
+uniform vec2 u_resolution;
+varying vec2 vTexCoord;
+
+void main() {
+    vec4 sum = vec4(0.0);
+    vec2 texelSize = 1.0 / u_resolution * u_blur;
+    
+    sum += texture2D(u_texture, vTexCoord + vec2(-1.0, -1.0) * texelSize);
+    sum += texture2D(u_texture, vTexCoord + vec2( 0.0, -1.0) * texelSize);
+    sum += texture2D(u_texture, vTexCoord + vec2( 1.0, -1.0) * texelSize);
+    sum += texture2D(u_texture, vTexCoord + vec2(-1.0,  0.0) * texelSize);
+    sum += texture2D(u_texture, vTexCoord + vec2( 0.0,  0.0) * texelSize);
+    sum += texture2D(u_texture, vTexCoord + vec2( 1.0,  0.0) * texelSize);
+    sum += texture2D(u_texture, vTexCoord + vec2(-1.0,  1.0) * texelSize);
+    sum += texture2D(u_texture, vTexCoord + vec2( 0.0,  1.0) * texelSize);
+    sum += texture2D(u_texture, vTexCoord + vec2( 1.0,  1.0) * texelSize);
+    
+    gl_FragColor = sum / 9.0;
+}`,
+  gaussianBlurEffect:`
+precision mediump float;
+uniform sampler2D u_texture;
+uniform float u_blur;
+uniform vec2 u_resolution;
+varying vec2 vTexCoord;
+
+void main() {
+    vec2 texelSize = 1.0 / u_resolution * u_blur;
+    vec4 sum = vec4(0.0);
+
+    sum += texture2D(u_texture, vTexCoord + vec2(-1.0, -1.0) * texelSize) * (1.0 / 16.0);
+    sum += texture2D(u_texture, vTexCoord + vec2( 0.0, -1.0) * texelSize) * (2.0 / 16.0);
+    sum += texture2D(u_texture, vTexCoord + vec2( 1.0, -1.0) * texelSize) * (1.0 / 16.0);
+    sum += texture2D(u_texture, vTexCoord + vec2(-1.0,  0.0) * texelSize) * (2.0 / 16.0);
+    sum += texture2D(u_texture, vTexCoord + vec2( 0.0,  0.0) * texelSize) * (4.0 / 16.0);
+    sum += texture2D(u_texture, vTexCoord + vec2( 1.0,  0.0) * texelSize) * (2.0 / 16.0);
+    sum += texture2D(u_texture, vTexCoord + vec2(-1.0,  1.0) * texelSize) * (1.0 / 16.0);
+    sum += texture2D(u_texture, vTexCoord + vec2( 0.0,  1.0) * texelSize) * (2.0 / 16.0);
+    sum += texture2D(u_texture, vTexCoord + vec2( 1.0,  1.0) * texelSize) * (1.0 / 16.0);
+
+    gl_FragColor = sum;
+}`,
+  outlineEffect: `
+precision mediump float;
+uniform sampler2D u_texture;
+uniform float u_strokeThickness;
+uniform vec4 u_color;
+uniform vec2 u_resolution;
+varying vec2 vTexCoord;
+
+void main() {
+    vec2 texelSize = 1.0 / u_resolution;
+    vec4 originalColor = texture2D(u_texture, vTexCoord);
+    float maxAlpha = 0.0;
+    float step = u_strokeThickness;
+
+    maxAlpha = max(maxAlpha, texture2D(u_texture, vTexCoord + vec2(0.0, -step) * texelSize).a);
+    maxAlpha = max(maxAlpha, texture2D(u_texture, vTexCoord + vec2(0.0, step) * texelSize).a);
+    maxAlpha = max(maxAlpha, texture2D(u_texture, vTexCoord + vec2(-step, 0.0) * texelSize).a);
+    maxAlpha = max(maxAlpha, texture2D(u_texture, vTexCoord + vec2(step, 0.0) * texelSize).a);
+    maxAlpha = max(maxAlpha, texture2D(u_texture, vTexCoord + vec2(-step, -step) * texelSize).a);
+    maxAlpha = max(maxAlpha, texture2D(u_texture, vTexCoord + vec2(step, -step) * texelSize).a);
+    maxAlpha = max(maxAlpha, texture2D(u_texture, vTexCoord + vec2(-step, step) * texelSize).a);
+    maxAlpha = max(maxAlpha, texture2D(u_texture, vTexCoord + vec2(step, step) * texelSize).a);
+
+    float outlineAlpha = maxAlpha * (1.0 - originalColor.a) * u_color.a;
+    vec4 outlineColor = vec4(u_color.rgb, outlineAlpha);
+    
+    gl_FragColor = mix(outlineColor, originalColor, originalColor.a);
+}`,
+  shadowEffect: `
+precision mediump float;
+uniform sampler2D u_texture;
+uniform float u_x;
+uniform float u_y;
+uniform float u_blur;
+uniform vec4 u_color;
+uniform vec2 u_resolution;
+varying vec2 vTexCoord;
+
+void main() {
+    vec4 originalColor = texture2D(u_texture, vTexCoord);
+    vec2 texelSize = 1.0 / u_resolution;
+    vec2 offset = vec2(u_x, -u_y) * texelSize;
+    
+    float shadowAlpha = 0.0;
+    float blurRadius = u_blur;
+
+    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2(-1.0, -1.0) * blurRadius * texelSize).a;
+    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2( 0.0, -1.0) * blurRadius * texelSize).a;
+    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2( 1.0, -1.0) * blurRadius * texelSize).a;
+    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2(-1.0,  0.0) * blurRadius * texelSize).a;
+    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2( 0.0,  0.0) * blurRadius * texelSize).a;
+    shadowAlpha += texture2D(u_texture, vTexCoord + vec2( 1.0,  0.0) * blurRadius * texelSize).a;
+    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2(-1.0,  1.0) * blurRadius * texelSize).a;
+    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2( 0.0,  1.0) * blurRadius * texelSize).a;
+    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2( 1.0,  1.0) * blurRadius * texelSize).a;
+    shadowAlpha /= 9.0;
+    
+    shadowAlpha *= (1.0 - originalColor.a);
+
+    vec4 shadowColor = vec4(u_color.rgb, u_color.a * shadowAlpha);
+    
+    gl_FragColor = mix(shadowColor, originalColor, originalColor.a);
+}`
 };
 export const byougaVertexShaderSources: Record<string, string> = {
 

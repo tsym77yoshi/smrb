@@ -83,6 +83,7 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
     switch (effect.type) {
       case "monocolorizationEffect":
         gl.uniform4fv(gl.getUniformLocation(effectProgram, "monolizeColor"), convertColorHEXA(effect.color));
+        gl.uniform1f(gl.getUniformLocation(effectProgram, "keepLuminance"), effect.keepBrightness ? 1 : 0);
         break;
       case "colorCorrectionEffect":
         uVarNumParameterNames = [
@@ -94,9 +95,26 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
         ];
         break;
       case "borderBlurEffect":
-      case "directionalBlurEffect":
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_resolution"), itemOption.width, itemOption.height);
+        uVarNumParameterNames = ["blur"];
+        break;
       case "gaussianBlurEffect":
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_resolution"), itemOption.width, itemOption.height);
+        uVarNumParameterNames = ["blur"];
+        break;
+      case "outlineEffect":
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_resolution"), itemOption.width, itemOption.height);
+        gl.uniform4fv(gl.getUniformLocation(effectProgram, "u_color"), convertColorHEXA(effect.color));
+        uVarNumParameterNames = ["strokeThickness"];
+        break;
+      case "shadowEffect":
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_resolution"), itemOption.width, itemOption.height);
+        gl.uniform4fv(gl.getUniformLocation(effectProgram, "u_color"), convertColorHEXA(effect.color));
+        uVarNumParameterNames = ["x", "y", "blur"];
+        break;
+      case "directionalBlurEffect":
       case "cropByAngleEffect":
+        break;
     }
 
     // 書き込み先: writeTex
@@ -108,7 +126,8 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
     // Uniform など設定
     for (const uVarNumParameterName of uVarNumParameterNames) {
       // @ts-ignore
-      gl.uniform1f(gl.getUniformLocation(effectProgram, "u_" + uVarNumParameterName), cConv.getVarNum(effect[uVarNumParameterName]));
+      const value = cConv.getVarNum(effect[uVarNumParameterName]);
+      gl.uniform1f(gl.getUniformLocation(effectProgram, "u_" + uVarNumParameterName), value);
     }
 
     if (isNullVertexShader) {
