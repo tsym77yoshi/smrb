@@ -186,8 +186,8 @@ export class Renderer {
       .fromScale(2 / this.#videoInfoStore.width, 2 / this.#videoInfoStore.height)
       .multiplyM(Matrix3.fromTranslation(itemOption.x, itemOption.y))
       .multiplyM(Matrix3.fromRotation(rotation))
-      .multiplyM(Matrix3.fromScale(zoom, zoom))
       .multiplyM(Matrix3.fromTranslation(itemOption.pivotX, itemOption.pivotY))
+      .multiplyM(Matrix3.fromScale(zoom, zoom))
       .multiplyM(Matrix3.fromScale(itemOption.width, itemOption.height))
       .transpose()
       .matrix;

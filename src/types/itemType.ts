@@ -391,7 +391,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
       y: { propertyType: "VarNumbers", name: "Y", unit: "px", range: 100, },
       angle: { propertyType: "VarNumbers", name: "回転角", unit: "°", range: 360, },
       blur: { propertyType: "VarNumbers", name: "ぼかし", unit: "px", min: 0, range: 10, },
-      width: { propertyType: "VarNumbers", name: "幅", unit: "px", range: 500, },
+      width: { propertyType: "VarNumbers", name: "幅", unit: "px", range: 500, hideLevel: "unimplemented", },
     }
   },
   monocolorizationEffect: {
@@ -416,8 +416,8 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
     searchName: "画像ループ",
     category: "配置",
     properties: {
-      x: { propertyType: "VarNumbers", name: "横", min: 1, range: 10, },
-      y: { propertyType: "VarNumbers", name: "縦", min: 1, range: 10, },
+      x: { propertyType: "VarNumbers", name: "横", min: 1, range: 10, step: 1, },
+      y: { propertyType: "VarNumbers", name: "縦", min: 1, range: 10, step: 1, },
     }
   },
   marginEffect: {

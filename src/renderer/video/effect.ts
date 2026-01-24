@@ -47,43 +47,14 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
     // shaderを使うエフェクトはここで適用
     let uVarNumParameterNames: string[] = [];
     let isNullVertexShader = false;
-    // fragment + vertexShader
+
+    // vertexShader用の設定を書く(推奨)
     switch (effect.type) {
-      case "cropEffect":
-        // 完全cropならcontinue
-        const cropedWidth = itemOption.width - (cConv.getVarNum(effect.left) + cConv.getVarNum(effect.right));
-        const cropedHeight = itemOption.height - (cConv.getVarNum(effect.top) + cConv.getVarNum(effect.bottom));
-        if (cropedHeight <= 0 || cropedWidth <= 0) {
-          continue;
-        }
-        // 上下左右
-        const cropRates = [
-          cConv.getVarNum(effect.top) / itemOption.height,
-          cConv.getVarNum(effect.bottom) / itemOption.height,
-          cConv.getVarNum(effect.left) / itemOption.width,
-          cConv.getVarNum(effect.right) / itemOption.width,
-        ];
-        gl.viewport(0, 0, cropedWidth, cropedHeight);
-        // itemOptionの変更
-        const positions = new Float32Array([
-          1, 1, 1 - cropRates[3], 1,// x y u v
-          1, -1, 1 - cropRates[3], 0,
-          -1, 1, cropRates[2], 1,
-          -1, -1, cropRates[2], 0,
-        ]);
-        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
-        const positionLoc = gl.getAttribLocation(effectProgram, "position");
-        gl.enableVertexAttribArray(positionLoc);
-        gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 16, 0);
-        const texCoordLoc = gl.getAttribLocation(effectProgram, "texCoord");
-        gl.enableVertexAttribArray(texCoordLoc);
-        gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 16, 8);
-        break;
       default:
         isNullVertexShader = true;
-        break;
     }
-    // fragmentShaderのみ
+
+    // fragmentShader用の設定を書く(推奨)
     switch (effect.type) {
       case "monocolorizationEffect":
         let luminanceColor = convertColorHEXA(effect.color);
@@ -145,6 +116,27 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
         gl.uniform1f(gl.getUniformLocation(effectProgram, "u_opacity"), cConv.getVarNum(effect.opacity) / 100);
         gl.uniform1f(gl.getUniformLocation(effectProgram, "u_isAbsolute"), effect.isAbsolute ? 1.0 : 0.0);
         break;
+      case "cropEffect":
+        // 完全cropならcontinue
+        const cropedWidth = itemOption.width - (cConv.getVarNum(effect.left) + cConv.getVarNum(effect.right));
+        const cropedHeight = itemOption.height - (cConv.getVarNum(effect.top) + cConv.getVarNum(effect.bottom));
+        if (cropedHeight <= 0 || cropedWidth <= 0) {
+          continue;
+        }
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_crop_offset"),
+          cConv.getVarNum(effect.left) / itemOption.width,
+          cConv.getVarNum(effect.top) / itemOption.height);
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_crop_size"),
+          cropedWidth / itemOption.width,
+          cropedHeight / itemOption.height);
+        gl.uniform1f(gl.getUniformLocation(effectProgram, "u_resolution"), 1.0);
+        break;
+      case "tilingEffect":
+        gl.uniform1f(gl.getUniformLocation(effectProgram, "u_x"), Math.round(cConv.getVarNum(effect.x)));
+        gl.uniform1f(gl.getUniformLocation(effectProgram, "u_y"), Math.round(cConv.getVarNum(effect.y)));
+        break;
+      case "marginEffect":
+        break;
     }
 
     // 書き込み先: writeTex
@@ -178,6 +170,26 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
     }
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    // 特殊な処理
+    switch(effect.type) {
+      case "cropEffect":
+        const cropedWidth = itemOption.width - (cConv.getVarNum(effect.left) + cConv.getVarNum(effect.right));
+        const cropedHeight = itemOption.height - (cConv.getVarNum(effect.top) + cConv.getVarNum(effect.bottom));
+        itemOption.width = cropedWidth;
+        itemOption.height = cropedHeight;
+        itemOption.pivotX += (cConv.getVarNum(effect.left) - cConv.getVarNum(effect.right)) / 2;
+        itemOption.pivotY -= (cConv.getVarNum(effect.top) - cConv.getVarNum(effect.bottom)) / 2;
+        break;
+      case "tilingEffect":
+        itemOption.width *= Math.round(cConv.getVarNum(effect.x));
+        itemOption.height *= Math.round(cConv.getVarNum(effect.y));
+        break;
+      case "marginEffect":
+        itemOption.width += cConv.getVarNum(effect.right) + cConv.getVarNum(effect.left);
+        itemOption.height += cConv.getVarNum(effect.bottom) + cConv.getVarNum(effect.top);
+        break;
+    }
 
     // 入れ替え
     const tmp = readTex;

@@ -192,7 +192,7 @@ void main() {
     float weights[${gaussMapResolution}];
     ${gaussMap}
 
-    vec4 color = 0.0;
+    vec4 color = texture2D(u_texture, vTexCoord) * weights[0] * weights[0];
     float k = u_blur * ${2.0 / gaussMapResolution};
 
     for (int i = 0; i < ${gaussMapResolution}; i++) {
@@ -224,7 +224,7 @@ void main() {
 
     vec4 color = texture2D(u_texture, vTexCoord) * weights[0];
     float k = u_standardDeviation * 0.5 * 0.1;
-    float angle = (-u_angle - 45.0) * 3.1416 / 180.0;
+    float angle = radians(-u_angle - 45.0);
     mat2 direction = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
 
     for (int i = 1; i < ${directionalBlurGaussMapResolution}; i++) {
@@ -293,7 +293,8 @@ varying vec2 vTexCoord;
 
 void main() {
   vec4 color = texture2D(u_texture, vTexCoord);
-  gl_FragColor = vec4(color.rgb, (u_isAbsolute > 0.5 ? 1.0 : color.a) * u_opacity);
+  float alpha = color.a < 0.001 ? 0.0 : (u_isAbsolute > 0.5 ? 1.0 : color.a) * u_opacity;
+  gl_FragColor = vec4(color.rgb, alpha);
 }`,
   cropByAngleEffect: `
 precision mediump float;
@@ -303,32 +304,43 @@ varying vec2 vTexCoord;
 uniform sampler2D u_texture;
 uniform vec2 u_center;
 uniform float u_angle;
-uniform float u_width;
 uniform float u_blur;
 uniform vec2 u_resolution;
 
 void main() {
     vec4 color = texture2D(u_texture, vTexCoord);
+    vec2 centerToCoord = (vTexCoord-vec2(0.5, 0.5)) * u_resolution - u_center;
+    vec2 direction = vec2(cos(radians(u_angle)), sin(radians(u_angle)));
 
-    vec2 pos_from_center = (vTexCoord * u_resolution) - u_resolution / 2.0;
-    vec2 final_pos = pos_from_center - u_center;
-
-    // Rotate the coordinate system
-    float angle_rad = radians(u_angle);
-    float s = sin(-angle_rad);
-    float c = cos(-angle_rad);
-    mat2 rotationMatrix = mat2(c, -s, s, c);
-    vec2 rotatedPos = rotationMatrix * final_pos;
-
-    // Distance from the center line of the band
-    float dist = abs(rotatedPos.x);
-
-    // Calculate alpha
-    float halfWidth = u_width / 2.0;
-    float alpha = 1.0 - smoothstep(halfWidth - u_blur, halfWidth, dist);
+    float distance = (centerToCoord.x * direction.y - centerToCoord.y * direction.x) / (u_blur < 0.001 ? 0.001 : u_blur);
+    float alpha = clamp(distance + 0.5, 0.0, 1.0);
 
     gl_FragColor = vec4(color.rgb, color.a * alpha);
 }`,
+  cropEffect: `
+precision mediump float;
+varying vec2 vTexCoord;
+uniform sampler2D u_texture;
+uniform vec2 u_crop_offset;// (left, top)の割合
+uniform vec2 u_crop_size;// (width, height)の割合
+
+void main() {
+  vec2 texPos = vec2(vTexCoord.x * u_crop_size.x, vTexCoord.y * u_crop_size.y) + u_crop_offset;
+  gl_FragColor = texture2D(u_texture, texPos);
+}`,
+  tilingEffect: `
+precision mediump float;
+varying vec2 vTexCoord;
+uniform sampler2D u_texture;
+uniform float u_x;
+uniform float u_y;
+
+void main() {
+  vec2 texPos = vec2(fract(vTexCoord.x * u_x), fract(vTexCoord.y * u_y));
+  gl_FragColor = texture2D(u_texture, texPos);
+}
+`,
+
 };
 export const byougaVertexShaderSources: Record<string, string> = {
 
