@@ -1,33 +1,41 @@
 export const byougaFragmentShaderSources: Record<string, string> = {
-  monocolorizationEffect:`
+  monocolorizationEffect: `
 precision mediump float;
 
 varying vec2 vTexCoord;
 
 uniform sampler2D texture;
 uniform vec4 monolizeColor;
+uniform float u_strength;
 
 /**
  * 0.0: 輝度を保持しない（従来動作）
  * 1.0: 輝度を保持する
  */
-uniform float keepLuminance;
+uniform float u_keepBrightness;
 
 void main() {
   vec4 color = texture2D(texture, vTexCoord);
 
   // 輝度計算
-  float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+  float Brightness = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+
+  // monolizeColorの輝度
+  float monoBrightness = dot(monolizeColor.rgb, vec3(0.299, 0.587, 0.114));
+
+  // 輝度を保持した単色化
+  // ゼロ除算を避ける
+  vec3 keepBrightnessColor = monoBrightness > 0.001 ? monolizeColor.rgb * (Brightness / monoBrightness) : vec3(0.0);
 
   // 輝度保持 or 単色化
   vec3 monoRgb = mix(
     monolizeColor.rgb,
-    monolizeColor.rgb * luminance,
-    keepLuminance
+    keepBrightnessColor,
+    u_keepBrightness
   );
 
   gl_FragColor = vec4(
-    monoRgb,
+    mix(color.rgb, monoRgb, u_strength),
     color.a * monolizeColor.a
   );
 }`,
@@ -102,7 +110,7 @@ void main() {
 
   gl_FragColor = vec4(clamp(c, 0.0, 1.0), src.a);
 }`,
-  borderBlurEffect:`
+  borderBlurEffect: `
 precision mediump float;
 uniform sampler2D u_texture;
 uniform float u_blur;
@@ -125,7 +133,7 @@ void main() {
     
     gl_FragColor = sum / 9.0;
 }`,
-  gaussianBlurEffect:`
+  gaussianBlurEffect: `
 precision mediump float;
 uniform sampler2D u_texture;
 uniform float u_blur;
@@ -154,6 +162,7 @@ uniform sampler2D u_texture;
 uniform float u_strokeThickness;
 uniform vec4 u_color;
 uniform vec2 u_resolution;
+uniform float u_isOutlineOnly;
 varying vec2 vTexCoord;
 
 void main() {
@@ -174,14 +183,13 @@ void main() {
     float outlineAlpha = maxAlpha * (1.0 - originalColor.a) * u_color.a;
     vec4 outlineColor = vec4(u_color.rgb, outlineAlpha);
     
-    gl_FragColor = mix(outlineColor, originalColor, originalColor.a);
+    gl_FragColor = u_isOutlineOnly > 0.5 ? outlineColor : mix(outlineColor, originalColor, originalColor.a);
 }`,
   shadowEffect: `
 precision mediump float;
 uniform sampler2D u_texture;
 uniform float u_x;
 uniform float u_y;
-uniform float u_blur;
 uniform vec4 u_color;
 uniform vec2 u_resolution;
 varying vec2 vTexCoord;
@@ -191,26 +199,23 @@ void main() {
     vec2 texelSize = 1.0 / u_resolution;
     vec2 offset = vec2(u_x, -u_y) * texelSize;
     
-    float shadowAlpha = 0.0;
-    float blurRadius = u_blur;
-
-    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2(-1.0, -1.0) * blurRadius * texelSize).a;
-    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2( 0.0, -1.0) * blurRadius * texelSize).a;
-    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2( 1.0, -1.0) * blurRadius * texelSize).a;
-    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2(-1.0,  0.0) * blurRadius * texelSize).a;
-    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2( 0.0,  0.0) * blurRadius * texelSize).a;
-    shadowAlpha += texture2D(u_texture, vTexCoord + vec2( 1.0,  0.0) * blurRadius * texelSize).a;
-    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2(-1.0,  1.0) * blurRadius * texelSize).a;
-    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2( 0.0,  1.0) * blurRadius * texelSize).a;
-    shadowAlpha += texture2D(u_texture, vTexCoord - offset + vec2( 1.0,  1.0) * blurRadius * texelSize).a;
-    shadowAlpha /= 9.0;
-    
-    shadowAlpha *= (1.0 - originalColor.a);
+    float shadowAlpha = texture2D(u_texture, vTexCoord - offset).a * (1.0 - originalColor.a);
 
     vec4 shadowColor = vec4(u_color.rgb, u_color.a * shadowAlpha);
     
     gl_FragColor = mix(shadowColor, originalColor, originalColor.a);
-}`
+}`,
+  opacityEffect: `
+precision mediump float;
+uniform sampler2D u_texture;
+uniform float u_opacity;
+uniform float u_isAbsolute;
+varying vec2 vTexCoord;
+
+void main() {
+  vec4 color = texture2D(u_texture, vTexCoord);
+  gl_FragColor = vec4(color.rgb, (u_isAbsolute > 0.5 ? 1.0 : color.a) * u_opacity);
+}`,
 };
 export const byougaVertexShaderSources: Record<string, string> = {
 

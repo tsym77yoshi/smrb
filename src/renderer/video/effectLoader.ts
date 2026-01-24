@@ -95,7 +95,7 @@ export class EffectLoader {
     this.#gl.shaderSource(shader, source);
     this.#gl.compileShader(shader);
     if (!this.#gl.getShaderParameter(shader, this.#gl.COMPILE_STATUS)) {
-      console.error("Shader compile error:", this.#gl.getShaderInfoLog(shader));
+      console.error("Shader compile error:", this.#gl.getShaderInfoLog(shader), source);
       this.#gl.deleteShader(shader);
       return null;
     }

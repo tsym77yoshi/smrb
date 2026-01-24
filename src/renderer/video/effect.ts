@@ -82,8 +82,23 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
     // fragmentShaderのみ
     switch (effect.type) {
       case "monocolorizationEffect":
-        gl.uniform4fv(gl.getUniformLocation(effectProgram, "monolizeColor"), convertColorHEXA(effect.color));
-        gl.uniform1f(gl.getUniformLocation(effectProgram, "keepLuminance"), effect.keepBrightness ? 1 : 0);
+        let luminanceColor = convertColorHEXA(effect.color);
+        if (effect.keepBrightness) {
+          let sum = luminanceColor[0] + luminanceColor[1] + luminanceColor[2];
+          if (sum == 0) {
+            luminanceColor = [0.333, 0.333, 0.333, luminanceColor[3]];
+          } else {
+            luminanceColor = [
+              luminanceColor[0] / sum,
+              luminanceColor[1] / sum,
+              luminanceColor[2] / sum,
+              luminanceColor[3],
+            ];
+          }
+        }
+        gl.uniform4fv(gl.getUniformLocation(effectProgram, "monolizeColor"), luminanceColor);
+        gl.uniform1f(gl.getUniformLocation(effectProgram, "u_keepBrightness"), effect.keepBrightness ? 1 : 0);
+        gl.uniform1f(gl.getUniformLocation(effectProgram, "u_strength"), cConv.getVarNum(effect.strength) / 100);
         break;
       case "colorCorrectionEffect":
         uVarNumParameterNames = [
@@ -105,15 +120,21 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
       case "outlineEffect":
         gl.uniform2f(gl.getUniformLocation(effectProgram, "u_resolution"), itemOption.width, itemOption.height);
         gl.uniform4fv(gl.getUniformLocation(effectProgram, "u_color"), convertColorHEXA(effect.color));
+        gl.uniform1f(gl.getUniformLocation(effectProgram, "u_isOutlineOnly"), effect.isOutlineOnly ? 1 : 0);
         uVarNumParameterNames = ["strokeThickness"];
         break;
       case "shadowEffect":
         gl.uniform2f(gl.getUniformLocation(effectProgram, "u_resolution"), itemOption.width, itemOption.height);
         gl.uniform4fv(gl.getUniformLocation(effectProgram, "u_color"), convertColorHEXA(effect.color));
-        uVarNumParameterNames = ["x", "y", "blur"];
+        uVarNumParameterNames = ["x", "y"];
         break;
       case "directionalBlurEffect":
+        break;
       case "cropByAngleEffect":
+        break;
+      case "opacityEffect":
+        gl.uniform1f(gl.getUniformLocation(effectProgram, "u_opacity"), cConv.getVarNum(effect.opacity) / 100);
+        gl.uniform1f(gl.getUniformLocation(effectProgram, "u_isAbsolute"), effect.isAbsolute ? 1.0 : 0.0);
         break;
     }
 

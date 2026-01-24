@@ -357,12 +357,12 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
     properties: {
       x: { propertyType: "VarNumbers", name: "X", unit: "px", range: 100, },
       y: { propertyType: "VarNumbers", name: "Y", unit: "px", range: 100, },
-      opacity: { propertyType: "VarNumbers", name: "不透明度", unit: "%", min: 0, max: 100, },
-      zoom: { propertyType: "VarNumbers", name: "拡大率", unit: "%", min: 0, range: 400, },
-      angle: { propertyType: "VarNumbers", name: "回転角", unit: "°", range: 360, },
-      blur: { propertyType: "VarNumbers", name: "ぼかし", unit: "px", min: 0, range: 10, },
+      opacity: { propertyType: "VarNumbers", name: "不透明度", unit: "%", min: 0, max: 100, hideLevel: "unimplemented", },
+      zoom: { propertyType: "VarNumbers", name: "拡大率", unit: "%", min: 0, range: 400, hideLevel: "unimplemented", },
+      angle: { propertyType: "VarNumbers", name: "回転角", unit: "°", range: 360, hideLevel: "unimplemented", },
+      blur: { propertyType: "VarNumbers", name: "ぼかし", unit: "px", min: 0, range: 10, hideLevel: "unimplemented", },
       color: { propertyType: "ColorHEXA", name: "影色", },
-      isRotateAtCenter: { propertyType: "boolean", name: "中心で回転", }
+      isRotateAtCenter: { propertyType: "boolean", name: "中心で回転", hideLevel: "unimplemented", }
       // brush -> colorへ
     }
   },
@@ -371,15 +371,15 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
     category: "装飾",
     properties: {
       strokeThickness: { propertyType: "VarNumbers", name: "太さ", unit: "px", min: 0, range: 10, },
-      blur: { propertyType: "VarNumbers", name: "ぼかし", unit: "px", min: 0, range: 10, },
-      x: { propertyType: "VarNumbers", name: "X", unit: "px", range: 100, },
-      y: { propertyType: "VarNumbers", name: "Y", unit: "px", range: 100, },
-      opacity: { propertyType: "VarNumbers", name: "不透明度", unit: "%", min: 0, max: 100, },
-      zoom: { propertyType: "VarNumbers", name: "拡大率", unit: "%", min: 0, range: 400, },
-      rotation: { propertyType: "VarNumbers", name: "回転角", unit: "°", range: 360, },
+      blur: { propertyType: "VarNumbers", name: "ぼかし", unit: "px", min: 0, range: 10, hideLevel: "unimplemented", },
+      x: { propertyType: "VarNumbers", name: "X", unit: "px", range: 100, hideLevel: "unimplemented", },
+      y: { propertyType: "VarNumbers", name: "Y", unit: "px", range: 100, hideLevel: "unimplemented", },
+      opacity: { propertyType: "VarNumbers", name: "不透明度", unit: "%", min: 0, max: 100, hideLevel: "unimplemented", },
+      zoom: { propertyType: "VarNumbers", name: "拡大率", unit: "%", min: 0, range: 400, hideLevel: "unimplemented", },
+      rotation: { propertyType: "VarNumbers", name: "回転角", unit: "°", range: 360, hideLevel: "unimplemented", },
       color: { propertyType: "ColorHEXA", name: "縁色", },
       isOutlineOnly: { propertyType: "boolean", name: "縁のみ", },
-      isAngular: { propertyType: "boolean", name: "角縁取り", },
+      isAngular: { propertyType: "boolean", name: "角縁取り", hideLevel: "unimplemented", },
       // StrokeBrush -> colorへ
     }
   },
@@ -450,11 +450,11 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
     name: "色調補正",
     category: "加工",
     properties: {
-      lightness: { propertyType: "VarNumbers", name: "明るさ", unit: "%", min: 0, range: 100, },
-      contrast: { propertyType: "VarNumbers", name: "コントラスト", unit: "%", min: 0, range: 100, },
+      lightness: { propertyType: "VarNumbers", name: "明るさ", unit: "%", min: 0, range: 200, },
+      contrast: { propertyType: "VarNumbers", name: "コントラスト", unit: "%", min: 0, range: 200, },
       hueRotation: { propertyType: "VarNumbers", name: "色相", unit: "°", range: 360, },
-      brightness: { propertyType: "VarNumbers", name: "輝度", unit: "%", min: 0, range: 100, },
-      saturation: { propertyType: "VarNumbers", name: "彩度", unit: "%", min: 0, range: 100, },
+      brightness: { propertyType: "VarNumbers", name: "輝度", unit: "%", min: 0, range: 200, },
+      saturation: { propertyType: "VarNumbers", name: "彩度", unit: "%", min: 0, range: 200, },
     }
   },
   cropEffect: {
