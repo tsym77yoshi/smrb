@@ -1,3 +1,32 @@
+// x/sigma=2までのガウス分布の計算
+const calcGaussMap = (reslution: number): string => {
+  let arr: number[] = [];
+  const calcGauss = (x: number): number => {
+    const x2 = x * x;
+    // これはsigmaマクローリン展開をしてx=2くらいまでならちょうどいいように係数を調整したもの
+    const y =
+      (((-x2 * 0.002 + 0.021) * x2 - 0.125) * x2
+        + 0.5) * x2;
+    return (1 - y) * 0.1592;
+  }
+  let sum = 0;
+  for (let i = 0; i < reslution; i++) {
+    arr[i] = calcGauss(i * 2 / reslution);
+    sum += arr[i] * (i == 0 ? 1 : 2);
+  }
+  let inv_sum = 1 / sum;
+  let str = ""
+  for (let i = 0; i < reslution; i++) {
+    arr[i] *= inv_sum;
+    str += "weights[" + i + "] = " + arr[i] + ";\n";
+  }
+  return str;
+}
+const gaussMapResolution = 4;
+const gaussMap = calcGaussMap(gaussMapResolution);
+const directionalBlurGaussMapResolution = 10;
+const directionalBlurGaussMap = calcGaussMap(directionalBlurGaussMapResolution);
+
 export const byougaFragmentShaderSources: Record<string, string> = {
   monocolorizationEffect: `
 precision mediump float;
@@ -113,48 +142,98 @@ void main() {
   borderBlurEffect: `
 precision mediump float;
 uniform sampler2D u_texture;
-uniform float u_blur;
-uniform vec2 u_resolution;
+uniform vec2 u_texelSize; // (1.0 / width, 1.0 / height)
+uniform float u_blur;     // ブラー半径（ピクセル）
 varying vec2 vTexCoord;
 
+float getTexAlpha(vec2 pos) {
+  if (pos.x < 0.0 || pos.x > 1.0 || pos.y < 0.0 || pos.y > 1.0) {
+    return 0.0;
+  }
+  return texture2D(u_texture, pos).a;
+}
+
 void main() {
-    vec4 sum = vec4(0.0);
-    vec2 texelSize = 1.0 / u_resolution * u_blur;
-    
-    sum += texture2D(u_texture, vTexCoord + vec2(-1.0, -1.0) * texelSize);
-    sum += texture2D(u_texture, vTexCoord + vec2( 0.0, -1.0) * texelSize);
-    sum += texture2D(u_texture, vTexCoord + vec2( 1.0, -1.0) * texelSize);
-    sum += texture2D(u_texture, vTexCoord + vec2(-1.0,  0.0) * texelSize);
-    sum += texture2D(u_texture, vTexCoord + vec2( 0.0,  0.0) * texelSize);
-    sum += texture2D(u_texture, vTexCoord + vec2( 1.0,  0.0) * texelSize);
-    sum += texture2D(u_texture, vTexCoord + vec2(-1.0,  1.0) * texelSize);
-    sum += texture2D(u_texture, vTexCoord + vec2( 0.0,  1.0) * texelSize);
-    sum += texture2D(u_texture, vTexCoord + vec2( 1.0,  1.0) * texelSize);
-    
-    gl_FragColor = sum / 9.0;
+    // ガウス重み（σ=2.0相当、正規化済み）
+    float weights[${gaussMapResolution}];
+    ${gaussMap}
+
+    vec4 base = texture2D(u_texture, vTexCoord);
+    float alpha = base.a * weights[0] * weights[0];
+    if (alpha <= 0.001 || u_blur <= 0.001) {
+        gl_FragColor = base;
+        return;
+    }
+
+    float k = u_blur * ${2.0/gaussMapResolution}; // sigma/i_max
+    for (int i = 0; i < ${gaussMapResolution}; i++) {
+      for (int j = 1; j < ${gaussMapResolution}; j++) {
+        float weight = weights[i] * weights[j];
+        vec2 offset = vec2(u_texelSize.x * float(i), u_texelSize.y * float(j)) * k;
+        alpha += getTexAlpha(vTexCoord + offset) * weight;
+        alpha += getTexAlpha(vTexCoord - offset) * weight;
+        alpha += getTexAlpha(vTexCoord + vec2(-offset.y, offset.x)) * weight;
+        alpha += getTexAlpha(vTexCoord - vec2(-offset.y, offset.x)) * weight;
+      }
+    }
+
+    gl_FragColor = vec4(base.rgb, alpha);
 }`,
   gaussianBlurEffect: `
 precision mediump float;
 uniform sampler2D u_texture;
-uniform float u_blur;
-uniform vec2 u_resolution;
+uniform vec2 u_texelSize; // (1.0 / width, 1.0 / height)
+uniform float u_blur;     // ブラー半径（ピクセル）
+
 varying vec2 vTexCoord;
 
 void main() {
-    vec2 texelSize = 1.0 / u_resolution * u_blur;
-    vec4 sum = vec4(0.0);
+    // ガウス重み（σ=2.0相当、正規化済み）
+    float weights[${gaussMapResolution}];
+    ${gaussMap}
 
-    sum += texture2D(u_texture, vTexCoord + vec2(-1.0, -1.0) * texelSize) * (1.0 / 16.0);
-    sum += texture2D(u_texture, vTexCoord + vec2( 0.0, -1.0) * texelSize) * (2.0 / 16.0);
-    sum += texture2D(u_texture, vTexCoord + vec2( 1.0, -1.0) * texelSize) * (1.0 / 16.0);
-    sum += texture2D(u_texture, vTexCoord + vec2(-1.0,  0.0) * texelSize) * (2.0 / 16.0);
-    sum += texture2D(u_texture, vTexCoord + vec2( 0.0,  0.0) * texelSize) * (4.0 / 16.0);
-    sum += texture2D(u_texture, vTexCoord + vec2( 1.0,  0.0) * texelSize) * (2.0 / 16.0);
-    sum += texture2D(u_texture, vTexCoord + vec2(-1.0,  1.0) * texelSize) * (1.0 / 16.0);
-    sum += texture2D(u_texture, vTexCoord + vec2( 0.0,  1.0) * texelSize) * (2.0 / 16.0);
-    sum += texture2D(u_texture, vTexCoord + vec2( 1.0,  1.0) * texelSize) * (1.0 / 16.0);
+    vec4 color = 0.0;
+    float k = u_blur * ${2.0 / gaussMapResolution};
 
-    gl_FragColor = sum;
+    for (int i = 0; i < ${gaussMapResolution}; i++) {
+      for (int j = 1; j < ${gaussMapResolution}; j++) {
+        float weight = weights[i] * weights[j];
+        vec2 offset = vec2(u_texelSize.x * float(i), u_texelSize.y * float(j)) * k;
+        color += texture2D(u_texture, vTexCoord + offset) * weight;
+        color += texture2D(u_texture, vTexCoord - offset) * weight;
+        color += texture2D(u_texture, vTexCoord + vec2(-offset.y, offset.x)) * weight;
+        color += texture2D(u_texture, vTexCoord - vec2(-offset.y, offset.x)) * weight;
+      }
+    }
+
+    gl_FragColor = color;
+}`,
+  directionalBlurEffect: `
+precision mediump float;
+uniform sampler2D u_texture;
+uniform vec2 u_texelSize; // (1.0 / width, 1.0 / height)
+uniform float u_standardDeviation;
+uniform float u_angle;
+
+varying vec2 vTexCoord;
+
+void main() {
+    // ガウス重み（σ=2.0相当、正規化済み）
+    float weights[${directionalBlurGaussMapResolution}];
+    ${directionalBlurGaussMap}
+
+    vec4 color = texture2D(u_texture, vTexCoord) * weights[0];
+    float k = u_standardDeviation * 0.5 * 0.1;
+    float angle = (-u_angle - 45.0) * 3.1416 / 180.0;
+    mat2 direction = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+
+    for (int i = 1; i < ${directionalBlurGaussMapResolution}; i++) {
+        vec2 offset = direction * u_texelSize * float(i) * k;
+        color += texture2D(u_texture, vTexCoord + offset) * weights[i];
+        color += texture2D(u_texture, vTexCoord - offset) * weights[i];
+    }
+
+    gl_FragColor = color;
 }`,
   outlineEffect: `
 precision mediump float;
@@ -215,6 +294,40 @@ varying vec2 vTexCoord;
 void main() {
   vec4 color = texture2D(u_texture, vTexCoord);
   gl_FragColor = vec4(color.rgb, (u_isAbsolute > 0.5 ? 1.0 : color.a) * u_opacity);
+}`,
+  cropByAngleEffect: `
+precision mediump float;
+
+varying vec2 vTexCoord;
+
+uniform sampler2D u_texture;
+uniform vec2 u_center;
+uniform float u_angle;
+uniform float u_width;
+uniform float u_blur;
+uniform vec2 u_resolution;
+
+void main() {
+    vec4 color = texture2D(u_texture, vTexCoord);
+
+    vec2 pos_from_center = (vTexCoord * u_resolution) - u_resolution / 2.0;
+    vec2 final_pos = pos_from_center - u_center;
+
+    // Rotate the coordinate system
+    float angle_rad = radians(u_angle);
+    float s = sin(-angle_rad);
+    float c = cos(-angle_rad);
+    mat2 rotationMatrix = mat2(c, -s, s, c);
+    vec2 rotatedPos = rotationMatrix * final_pos;
+
+    // Distance from the center line of the band
+    float dist = abs(rotatedPos.x);
+
+    // Calculate alpha
+    float halfWidth = u_width / 2.0;
+    float alpha = 1.0 - smoothstep(halfWidth - u_blur, halfWidth, dist);
+
+    gl_FragColor = vec4(color.rgb, color.a * alpha);
 }`,
 };
 export const byougaVertexShaderSources: Record<string, string> = {

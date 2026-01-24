@@ -347,7 +347,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
     category: "加工",
     properties: {
       blur: { propertyType: "VarNumbers", name: "ぼかし度", min: 0, range: 50, },
-      isHardBorderMode: { propertyType: "boolean", name: "サイズを固定", },
+      isHardBorderMode: { propertyType: "boolean", name: "サイズを固定", hideLevel: "unimplemented", },
     }
   },
   shadowEffect: {
@@ -488,7 +488,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
       blur: { propertyType: "VarNumbers", name: "サイズ", min: 0, max: 75, },
       x: { propertyType: "VarNumbers", name: "中心X", unit: "px", range: 500, },
       y: { propertyType: "VarNumbers", name: "中心Y", unit: "px", range: 500, },
-      isHardBorderMode: { propertyType: "boolean", name: "サイズを固定", },
+      isHardBorderMode: { propertyType: "boolean", name: "サイズを固定", hideLevel: "unimplemented", },
     }
   },
   directionalBlurEffect: {
@@ -496,8 +496,8 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
     category: "加工",
     properties: {
       standardDeviation: { propertyType: "VarNumbers", name: "ぼかし度", min: 0, max: 250, },
-      angle: { propertyType: "VarNumbers", name: "回転角", unit: "°", range: 360, },
-      isHardBorderMode: { propertyType: "boolean", name: "サイズを固定", },
+      angle: { propertyType: "VarNumbers", name: "回転角", unit: "°", range: 90, },
+      isHardBorderMode: { propertyType: "boolean", name: "サイズを固定", hideLevel: "unimplemented", },
     }
   },
   zoomEffect: {
@@ -507,7 +507,7 @@ export const videoEffectGroup/* : Record<string, EffectPropertyGroup> */ = {
       zoom: { propertyType: "VarNumbers", name: "全体", unit: "%", min: 0, range: 500, },
       zoomX: { propertyType: "VarNumbers", name: "横方向", unit: "%", range: 500, },
       zoomY: { propertyType: "VarNumbers", name: "縦方向", unit: "%", range: 500, },
-      isNearestNeighbor: { propertyType: "boolean", name: "ドット絵", },
+      isNearestNeighbor: { propertyType: "boolean", name: "ドット絵", hideLevel: "unimplemented", },
     }
   }
 } as const;

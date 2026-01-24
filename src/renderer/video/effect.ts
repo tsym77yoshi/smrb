@@ -33,6 +33,10 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
       case "centerPointEffect":
         applyCenterPointEffect(effect, itemOption, cConv);
         continue;// forに対してcontinue
+      case "zoomEffect":
+        itemOption.width *= cConv.getVarNum(effect.zoom) * cConv.getVarNum(effect.zoomX);
+        itemOption.height *= cConv.getVarNum(effect.zoom) * cConv.getVarNum(effect.zoomY);
+        continue;
     }
 
     const effectProgram = effectLoader.useEffect(effect.type);
@@ -110,11 +114,11 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
         ];
         break;
       case "borderBlurEffect":
-        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_resolution"), itemOption.width, itemOption.height);
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_texelSize"), 1.0 / itemOption.width, 1.0 / itemOption.height);
         uVarNumParameterNames = ["blur"];
         break;
       case "gaussianBlurEffect":
-        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_resolution"), itemOption.width, itemOption.height);
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_texelSize"), 1.0 / itemOption.width, 1.0 / itemOption.height);
         uVarNumParameterNames = ["blur"];
         break;
       case "outlineEffect":
@@ -129,8 +133,13 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
         uVarNumParameterNames = ["x", "y"];
         break;
       case "directionalBlurEffect":
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_texelSize"), 1.0 / itemOption.width, 1.0 / itemOption.height);
+        uVarNumParameterNames = ["standardDeviation", "angle"];
         break;
       case "cropByAngleEffect":
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_resolution"), itemOption.width, itemOption.height);
+        gl.uniform2f(gl.getUniformLocation(effectProgram, "u_center"), cConv.getVarNum(effect.x), -cConv.getVarNum(effect.y));
+        uVarNumParameterNames = ["angle", "width", "blur"];
         break;
       case "opacityEffect":
         gl.uniform1f(gl.getUniformLocation(effectProgram, "u_opacity"), cConv.getVarNum(effect.opacity) / 100);
