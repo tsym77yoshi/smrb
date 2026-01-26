@@ -10,10 +10,14 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
 
   const effectLoader = new EffectLoader(gl);
 
+  gl.bindTexture(gl.TEXTURE_2D, null);
+
+
   const targetTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, targetTexture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, itemOption.width, itemOption.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   setTextureSetting(gl);
+  gl.bindTexture(gl.TEXTURE_2D, null);
 
   // フレームバッファ
   const framebuffer = gl.createFramebuffer();
@@ -169,6 +173,7 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
       gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 16, 8);
     }
 
+    gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
     // 特殊な処理
@@ -191,13 +196,12 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
         break;
     }
 
+    
+    //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
     // 入れ替え
-    const tmp = readTex;
-    if (!writeTex) {
-      throw new Error("writeTex is undefined");
-    }
-    readTex = writeTex;
-    writeTex = tmp;
+    [readTex, writeTex] = [writeTex, readTex];
   }
 
   // FBOから切り離し
