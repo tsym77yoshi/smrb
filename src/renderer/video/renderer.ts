@@ -8,7 +8,7 @@ import type {
 } from "@/types/itemType";
 import { useFileStore } from "@/store/fileStore";
 import { useVideoInfoStore } from "@/store/tlStore";
-import type { ItemOption } from "./rendererTypes";
+import type { ItemOption, Work } from "./rendererTypes";
 
 import { drawText } from "./draws/drawText";
 import { TextureStore } from "./draws/drawImage";
@@ -19,6 +19,7 @@ import { applyEffect } from "./effect";
 import { EffectLoader } from "./effectLoader";
 import { CurveConverter } from "./curveConverter";
 import { Matrix3 } from "./matrix";
+import { createTexture } from "./webglUtility";
 
 export class Renderer {
   #gl: WebGLRenderingContext;
@@ -28,6 +29,9 @@ export class Renderer {
   #drawEffectLoader: EffectLoader;
   #drawShaderProgram: WebGLProgram | undefined;
   #textureStore: TextureStore;
+  #workA: Work;
+  #workB: Work;
+  #itemWorks: WebGLTexture[] = [];
 
   constructor(inputgl: WebGLRenderingContext | null) {
     if (!inputgl) throw new Error("WebGL not supported");
@@ -65,12 +69,14 @@ export class Renderer {
       }
       else {
         console.error("Draw shader program creation failed");
-        return;
+        // return;
       }
     }
     else {
       console.error("Draw shader program creation failed");
     }
+    this.#workA = this.#createWorkFBO(this.#gl, this.#videoInfoStore.width, this.#videoInfoStore.height);
+    this.#workB = this.#createWorkFBO(this.#gl, this.#videoInfoStore.width, this.#videoInfoStore.height);
   }
 
   getGL() {
@@ -105,6 +111,7 @@ export class Renderer {
     this.#gl.clear(this.#gl.COLOR_BUFFER_BIT);
 
     const targetItems = this.#getTargetItems(itemLayers, frame);
+    let count = 0;
     for (const item of targetItems) {
       if (item.isHidden) continue;
       const itemType = item.type;
@@ -151,6 +158,7 @@ export class Renderer {
           this.rerender(frame, itemLayers, this.#renderIdStore);
         });
       }
+      count++;
     }
     this.#gl.flush();
   }
@@ -162,11 +170,11 @@ export class Renderer {
     });
   }
 
-  #draw(item: DrawingItem, texture: WebGLTexture, itemOption: ItemOption, cConv: CurveConverter) {
+  #draw(item: DrawingItem, srcTexture: WebGLTexture, itemOption: ItemOption, cConv: CurveConverter) {
     const gl = this.#gl;// 書きやすくするため
 
     // エフェクトを適用する
-    texture = applyEffect(gl, item, texture, itemOption, cConv);
+    let texture = applyEffect(gl, item, srcTexture, itemOption, cConv, this.#workA, this.#workB);
 
     // drawingItemの描画
     if (!this.#drawShaderProgram) {
@@ -225,5 +233,38 @@ export class Renderer {
     const texCoordLoc = gl.getAttribLocation(shaderProgram, "texCoord");
     gl.enableVertexAttribArray(texCoordLoc);
     gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 16, 8);
+  }
+
+  #createWorkFBO(
+    gl: WebGLRenderingContext,
+    width: number,
+    height: number
+  ) {
+    const tex = gl.createTexture()!
+    gl.bindTexture(gl.TEXTURE_2D, tex)
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      width,
+      height,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      null
+    )
+
+    const fbo = gl.createFramebuffer()!
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,
+      tex,
+      0
+    )
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+
+    return { fbo, tex }
   }
 }

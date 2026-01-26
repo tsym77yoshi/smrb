@@ -8,3 +8,7 @@ export type ItemOption = {
   pivotY: number;// 回転拡大用の中心から映しているものの中心までの符号付き距離y
   itemFrame: number;// アイテム開始からのフレーム数
 }
+export type Work = {
+  fbo: WebGLFramebuffer,
+  tex: WebGLTexture,
+};

@@ -1,28 +1,16 @@
 import { allVideoEffectGroup, type DrawingItem, type ToEffectType } from "@/types/itemType";
-import type { ItemOption } from "./rendererTypes";
+import type { ItemOption, Work } from "./rendererTypes";
 import type { CurveConverter } from "./curveConverter";
 import { EffectLoader } from "./effectLoader";
 import { setTextureSetting } from "./webglUtility";
 import { convertColorHEXA } from "@/composables/colorConverter";
 
-export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, sourceTexture: WebGLTexture, itemOption: ItemOption, cConv: CurveConverter): WebGLTexture => {
+export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, sourceTexture: WebGLTexture, itemOption: ItemOption, cConv: CurveConverter, workA: Work, workB: Work): WebGLTexture => {
   if (item.videoEffects.length == 0) return sourceTexture;
 
   const effectLoader = new EffectLoader(gl);
-
-  const targetTexture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, itemOption.width, itemOption.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-  setTextureSetting(gl);
-
-  // フレームバッファ
-  const framebuffer = gl.createFramebuffer();
-  gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-
-
-  // 処理ループ
-  let readTex = sourceTexture;
-  let writeTex = targetTexture;
+  let dist = workA;
+  let srcTex = sourceTexture;
 
   for (const effect of item.videoEffects) {
     if (!effect.isEnabled) {
@@ -139,11 +127,29 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
         break;
     }
 
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, dist.fbo);
+    gl.activeTexture(gl.TEXTURE0);
+    // texサイズ変更
+    gl.bindTexture(gl.TEXTURE_2D, dist.tex);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      itemOption.width,
+      itemOption.height,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      null
+    )
+    gl.bindTexture(gl.TEXTURE_2D, null);
     // 書き込み先: writeTex
-    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, writeTex, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, dist.tex, 0);
+    // gl.clear(gl.COLOR_BUFFER_BIT);
     // 読み込み元: readTex
-    gl.bindTexture(gl.TEXTURE_2D, readTex);
+    gl.bindTexture(gl.TEXTURE_2D, srcTex);
+    gl.uniform1i(gl.getUniformLocation(effectProgram, "u_texture"), 0);
 
     // Uniform など設定
     for (const uVarNumParameterName of uVarNumParameterNames) {
@@ -169,10 +175,15 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
       gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 16, 8);
     }
 
+    gl.clearColor(0.0, 1.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    if (srcTex === dist.tex) {
+      console.error("READ / WRITE texture collision");
+    }
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
     // 特殊な処理
-    switch(effect.type) {
+    switch (effect.type) {
       case "cropEffect":
         const cropedWidth = itemOption.width - (cConv.getVarNum(effect.left) + cConv.getVarNum(effect.right));
         const cropedHeight = itemOption.height - (cConv.getVarNum(effect.top) + cConv.getVarNum(effect.bottom));
@@ -192,17 +203,15 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
     }
 
     // 入れ替え
-    const tmp = readTex;
-    if (!writeTex) {
-      throw new Error("writeTex is undefined");
-    }
-    readTex = writeTex;
-    writeTex = tmp;
+    // gl.bindTexture(gl.TEXTURE_2D, null);
+    srcTex = dist.tex;
+    dist = (dist == workA) ? workB : workA;
   }
 
   // FBOから切り離し
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  return readTex; // 最終結果は最後に読み込みに使っていた方
+  console.log(workA.tex == srcTex, workB.tex == srcTex);
+  return srcTex; // 最終結果は最後に読み込みに使っていた方
 }
 
 const applyCenterPointEffect = (effect: ToEffectType<typeof allVideoEffectGroup["centerPointEffect"], "centerPointEffect">, itemOption: ItemOption, cConv: CurveConverter) => {
