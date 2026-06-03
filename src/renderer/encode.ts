@@ -1,3 +1,5 @@
+/// <reference types="@types/dom-webcodecs" />
+
 import { useItemsStore, useStateStore, useVideoInfoStore } from "@/store/tlStore";
 import { Renderer } from "@/renderer/video/renderer";
 import { AudioPlayer } from "@/renderer/audio/audio";

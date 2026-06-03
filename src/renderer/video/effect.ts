@@ -202,6 +202,10 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
     gl.bindTexture(gl.TEXTURE_2D, null);
 
     // 入れ替え
+    if (readTex == null || writeTex == null) {
+      console.error("readTex or writeTex is null");
+      continue;
+    }
     [readTex, writeTex] = [writeTex, readTex];
   }
 
