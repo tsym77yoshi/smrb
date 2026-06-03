@@ -22,7 +22,8 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
   // フレームバッファ
   const framebuffer = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-
+  
+  gl.disable(gl.BLEND);
 
   // 処理ループ
   let readTex = sourceTexture;
@@ -206,6 +207,7 @@ export const applyEffect = (gl: WebGLRenderingContext, item: DrawingItem, source
 
   // FBOから切り離し
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.enable(gl.BLEND); 
   return readTex; // 最終結果は最後に読み込みに使っていた方
 }
 

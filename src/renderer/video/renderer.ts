@@ -9,6 +9,7 @@ import type {
 import { useFileStore } from "@/store/fileStore";
 import { useVideoInfoStore } from "@/store/tlStore";
 import type { ItemOption } from "./rendererTypes";
+import { createTexture } from "./webglUtility"
 
 import { drawText } from "./draws/drawText";
 import { TextureStore } from "./draws/drawImage";
@@ -100,6 +101,28 @@ export class Renderer {
   }
 
   // 描画する(待たずに描画するかは関数の引数)
+  // 設計図
+  // void render() {
+  //   gl.clear(); 
+  //   for(item of items){
+  //     bufをバインド();
+  //     texAを書き込み用に紐づけ();
+  //     gl.clear();
+  //     itemの種類に応じて書き込む();
+  //     src = texA;
+  //     dst = texB;
+  //     for(effect of item.effects) {
+  //       dstを書き込み用に紐づけ();
+  //       srcをソースにする();
+  //       gl.clear();
+  //       エフェクトに応じて書き込む();
+  //       [src,dst]=[dst,src];
+  //     }
+  //     bufをunbind(); 
+  //     blendモードでsrcを書き加える();
+  //   }
+  //   flush(); 
+  // }
   #render = async (frame: number, itemLayers: Item[][], isWaitLoad: boolean) => {
     this.#gl.clearColor(0, 0, 0, 1);
     this.#gl.clear(this.#gl.COLOR_BUFFER_BIT);
